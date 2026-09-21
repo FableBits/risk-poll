@@ -3,72 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Risk Poll - Scrollytelling Proof of Concept</title>
+<title>Risk Poll - D3 Chart Test</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- Persistent category nav, bottom right -->
 <nav id="category-nav">
   <ul>
-    <li class="category-link" data-category="main-risks">Main Risks</li>
+    <li class="category-link active" data-category="main-risks">Main Risks</li>
     <li class="category-link" data-category="worry-experience">Worry vs Experience</li>
     <li class="category-link" data-category="discrimination">Discrimination</li>
     <li class="category-link" data-category="resilience">Resilience</li>
   </ul>
 </nav>
 
-<!-- Question title placeholder, sits above the sticky chart -->
-<div id="question-title">Question title will appear here</div>
+<div id="question-title">Do you feel safer than 5 years ago?</div>
 
-<!-- Sticky chart area -->
+<!-- Sticky chart area: this box itself never moves. -->
 <div id="chart-area">
-  <p>CHART AREA (placeholder)</p>
-  <p id="debug-info">No step active yet</p>
+  <div class="chart-panel" id="panel-own">
+    <div class="panel-label">Your selection: France, Gender = Female</div>
+    <svg class="chart-svg" data-series="own"></svg>
+  </div>
+  <div class="chart-panel" id="panel-country">
+    <div class="panel-label">Country average: France</div>
+    <svg class="chart-svg" data-series="country"></svg>
+  </div>
+  <div class="chart-panel" id="panel-global">
+    <div class="panel-label">Global average</div>
+    <svg class="chart-svg" data-series="global"></svg>
+  </div>
 </div>
 
-<!-- Scrollytelling steps -->
 <div id="scroll-container">
 
   <div class="step" data-category="main-risks" data-title="Category intro: Main Risks" data-type="category-intro">
-    <p>Category intro text: Main Risks (a few sentences here eventually)</p>
+    <p>Category intro text: Main Risks (a few sentences here eventually).
+    Scroll down to see the chart test for "Do you feel safer than 5 years ago?"</p>
   </div>
 
   <div class="step" data-category="main-risks" data-title="Do you feel safer than 5 years ago?" data-type="reveal-1"></div>
   <div class="step" data-category="main-risks" data-title="Do you feel safer than 5 years ago?" data-type="reveal-2"></div>
   <div class="step" data-category="main-risks" data-title="Do you feel safer than 5 years ago?" data-type="reveal-3"></div>
 
-  <div class="step" data-category="main-risks" data-title="Do you worry about climate change?" data-type="reveal-1"></div>
-  <div class="step" data-category="main-risks" data-title="Do you worry about climate change?" data-type="reveal-2"></div>
-  <div class="step" data-category="main-risks" data-title="Do you worry about climate change?" data-type="reveal-3"></div>
-
-  <div class="step" data-category="worry-experience" data-title="Category intro: Worry vs Experience" data-type="category-intro">
-    <p>Category intro text: Worry vs Experience (a few sentences here eventually)</p>
+  <div class="step" data-category="main-risks" data-title="End of test" data-type="category-intro">
+    <p>End of D3 chart test. This step exists just so the previous chart
+    step has room to be scrolled past comfortably.</p>
   </div>
-
-  <div class="step" data-category="worry-experience" data-title="Worry vs Experience: Harm from food or water" data-type="reveal-1"></div>
-  <div class="step" data-category="worry-experience" data-title="Worry vs Experience: Harm from food or water" data-type="reveal-2"></div>
-  <div class="step" data-category="worry-experience" data-title="Worry vs Experience: Harm from food or water" data-type="reveal-3"></div>
-
-  <div class="step" data-category="discrimination" data-title="Category intro: Discrimination" data-type="category-intro">
-    <p>Category intro text: Discrimination (a few sentences here eventually)</p>
-  </div>
-
-  <div class="step" data-category="discrimination" data-title="Have you experienced discrimination?" data-type="reveal-1"></div>
-  <div class="step" data-category="discrimination" data-title="Have you experienced discrimination?" data-type="reveal-2"></div>
-  <div class="step" data-category="discrimination" data-title="Have you experienced discrimination?" data-type="reveal-3"></div>
-
-  <div class="step" data-category="resilience" data-title="Category intro: Resilience" data-type="category-intro">
-    <p>Category intro text: Resilience (a few sentences here eventually)</p>
-  </div>
-
-  <div class="step" data-category="resilience" data-title="Do you feel resilient to disasters?" data-type="reveal-1"></div>
-  <div class="step" data-category="resilience" data-title="Do you feel resilient to disasters?" data-type="reveal-2"></div>
-  <div class="step" data-category="resilience" data-title="Do you feel resilient to disasters?" data-type="reveal-3"></div>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/scrollama@3.2.0/build/scrollama.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

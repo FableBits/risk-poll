@@ -9,21 +9,55 @@ body {
   color: #eee;
 }
 
-/* Sticky chart area: stays fixed on screen while steps scroll past */
+/* Sticky chart area: stays fixed on screen while steps scroll past.
+   Its overall height stays constant - only the panels INSIDE it
+   resize/appear, the box itself never moves or grows. */
 #chart-area {
   position: sticky;
-  top: 60px; /* leaves room for the title above it */
-  height: 50vh;
+  top: 60px;
+  height: 65vh;
   margin: 0 auto;
-  max-width: 600px;
-  background: #222;
-  border: 2px dashed #555;
+  max-width: 650px;
+  background: #1a1a1a;
+  border: 2px dashed #444;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
+  padding: 10px;
   z-index: 1;
+  gap: 8px;
+}
+
+/* Each panel: starts collapsed (flex-grow 0, height 0, invisible),
+   and grows/shrinks via flex-grow + opacity transitions.
+   Using flex-grow means panels share the FIXED #chart-area height
+   between them, so nothing overflows or pushes the box itself. */
+.chart-panel {
+  flex-grow: 0;
+  flex-basis: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: flex-grow 0.6s ease, opacity 0.6s ease;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-panel.visible {
+  flex-grow: 1;
+  opacity: 1;
+}
+
+.panel-label {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+.chart-svg {
+  width: 100%;
+  flex-grow: 1;
+  min-height: 0;
 }
 
 /* Question title placeholder */
@@ -38,13 +72,10 @@ body {
   z-index: 2;
 }
 
-/* Steps: each occupies vertical scroll space.
-   Category intro steps are taller (more to read),
-   reveal steps are shorter (faster pacing). */
 .step {
   position: relative;
   z-index: 3;
-  pointer-events: none; /* let scroll pass through, text area below chart is just for debug */
+  pointer-events: none;
 }
 
 .step[data-type="category-intro"] {
@@ -61,13 +92,6 @@ body {
   height: 70vh;
 }
 
-/* Alternate faint background tint per step, purely so we can SEE
-   step boundaries during this proof-of-concept phase. Remove later. */
-.step:nth-child(odd) {
-  background: rgba(255,255,255,0.02);
-}
-
-/* Category nav, bottom right, persistent */
 #category-nav {
   position: fixed;
   bottom: 20px;
@@ -93,14 +117,13 @@ body {
 }
 
 #category-nav li.active {
-  color: #ff5db1; /* vivid highlight color, placeholder for final palette */
+  color: #ff5db1;
   font-weight: bold;
 }
 
-/* Mobile adjustments */
 @media (max-width: 600px) {
   #chart-area {
-    height: 40vh;
+    height: 55vh;
     max-width: 100%;
   }
   #question-title {
