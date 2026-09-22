@@ -1,8 +1,5 @@
-// --- D3 chart test: proving charts appear "in place" inside a
-// sticky box, with panels resizing (not sliding) to make room. ---
+// --- D3 chart test: crossfade transitions, no resize distortion ---
 
-// Fake data: 4 fake years, 3 answer lines, for 3 levels
-// (own selection, country average, global average).
 const years = [2018, 2019, 2021, 2023];
 
 const fakeData = {
@@ -31,7 +28,7 @@ const colors = {
 
 function drawChart(svgSelector, seriesData) {
   const svg = d3.select(svgSelector);
-  svg.selectAll("*").remove(); // clear before redraw (safe on resize)
+  svg.selectAll("*").remove();
 
   const node = svg.node();
   const width = node.clientWidth || 300;
@@ -83,18 +80,58 @@ function drawChart(svgSelector, seriesData) {
   });
 }
 
-function redrawAllVisiblePanels() {
-  // Redraw whichever panels are currently visible, sized to their
-  // NEW dimensions (important since flex-grow just changed their height).
-  if (document.getElementById("panel-own").classList.contains("visible")) {
-    drawChart('svg[data-series="own"]', fakeData.own);
-  }
-  if (document.getElementById("panel-country").classList.contains("visible")) {
-    drawChart('svg[data-series="country"]', fakeData.country);
-  }
-  if (document.getElementById("panel-global").classList.contains("visible")) {
-    drawChart('svg[data-series="global"]', fakeData.global);
-  }
+const panelIds = {
+  own: "panel-own",
+  country: "panel-country",
+  global: "panel-global"
+};
+
+function redrawPanel(key) {
+  drawChart(`svg[data-series="${key}"]`, fakeData[key]);
+}
+
+// Crossfade logic:
+// 1. Fade OUT every panel (opacity -> 0), wait for the fade to finish.
+// 2. While invisible, instantly resize panels to the new stage AND
+//    redraw their chart content at the new size (no visible deformation,
+//    since nothing is visible at this moment).
+// 3. Fade IN the panels that should be visible at this stage.
+let transitionToken = 0;
+
+function showPanelsUpTo(stage) {
+  const myToken = ++transitionToken; // guards against overlapping transitions
+  const allKeys = ["own", "country", "global"];
+  const allPanels = allKeys.map((k) => document.getElementById(panelIds[k]));
+
+  // Step 1: fade everything out
+  allPanels.forEach((p) => p.classList.remove("shown"));
+
+  setTimeout(() => {
+    if (myToken !== transitionToken) return; // a newer transition took over
+
+    // Step 2: resize instantly (invisible) + redraw at final size
+    allKeys.forEach((key, i) => {
+      const shouldBeVisible = (i + 1) <= stage;
+      const panel = allPanels[i];
+      panel.classList.toggle("visible", shouldBeVisible);
+    });
+
+    // Let layout settle one frame before measuring/drawing
+    requestAnimationFrame(() => {
+      if (myToken !== transitionToken) return;
+      allKeys.forEach((key, i) => {
+        if ((i + 1) <= stage) redrawPanel(key);
+      });
+
+      // Step 3: fade the correct panels back in
+      requestAnimationFrame(() => {
+        if (myToken !== transitionToken) return;
+        allKeys.forEach((key, i) => {
+          if ((i + 1) <= stage) allPanels[i].classList.add("shown");
+        });
+      });
+    });
+  }, 460); // slightly longer than the 0.45s opacity transition
 }
 
 // --- Scrollama wiring ---
@@ -105,17 +142,6 @@ function setActiveCategory(category) {
   categoryLinks.forEach((link) => {
     link.classList.toggle("active", link.dataset.category === category);
   });
-}
-
-function showPanelsUpTo(stage) {
-  // stage: 1, 2, or 3 -> show that many panels, hide the rest
-  document.getElementById("panel-own").classList.toggle("visible", stage >= 1);
-  document.getElementById("panel-country").classList.toggle("visible", stage >= 2);
-  document.getElementById("panel-global").classList.toggle("visible", stage >= 3);
-
-  // Wait for the CSS flex-grow transition to finish before redrawing,
-  // so the D3 chart draws at its FINAL size, not its mid-transition size.
-  setTimeout(redrawAllVisiblePanels, 620);
 }
 
 function handleStepEnter(response) {
@@ -145,7 +171,10 @@ scroller
 
 window.addEventListener("resize", () => {
   scroller.resize();
-  redrawAllVisiblePanels();
+  ["own", "country", "global"].forEach((key) => {
+    const panel = document.getElementById(panelIds[key]);
+    if (panel.classList.contains("visible")) redrawPanel(key);
+  });
 });
 
 categoryLinks.forEach((link) => {
