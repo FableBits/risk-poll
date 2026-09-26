@@ -1,30 +1,101 @@
-// --- D3 chart test: crossfade transitions, no resize distortion ---
+// --- Config for current test: metric, place, and selected dimension ---
+const currentMetric = "More_Safe";
+const currentCountry = "France";
+const currentDimension = "Gender";
+const currentDimensionValue = "2"; // stored as a numeric-looking string in the data
 
-const years = [2018, 2019, 2021, 2023];
+const dimensionValueLabels = {
+  Gender: {
+    "1": "Male",
+    "2": "Female"
+  }
+};
 
-const fakeData = {
-  own: [
-    { label: "Yes", values: [40, 45, 50, 58] },
-    { label: "No", values: [45, 40, 35, 30] },
-    { label: "Don't know", values: [15, 15, 15, 12] }
-  ],
-  country: [
-    { label: "Yes", values: [38, 40, 42, 46] },
-    { label: "No", values: [48, 46, 45, 42] },
-    { label: "Don't know", values: [14, 14, 13, 12] }
-  ],
-  global: [
-    { label: "Yes", values: [35, 36, 38, 40] },
-    { label: "No", values: [50, 49, 47, 46] },
-    { label: "Don't know", values: [15, 15, 15, 14] }
-  ]
+const metricLabels = {
+  More_Safe: {
+    1: "More safe",
+    2: "Less safe",
+    3: "About as safe",
+    98: "Don't know",
+    99: "Refused"
+  }
 };
 
 const colors = {
-  "Yes": "#ff5db1",
-  "No": "#3ddc97",
-  "Don't know": "#ffd23f"
+  "More safe": "#ff5db1",
+  "Less safe": "#3ddc97",
+  "About as safe": "#ffd23f",
+  "Don't know": "#888",
+  "Refused": "#555"
 };
+
+let years = [];
+let chartData = { own: [], country: [], global: [] };
+
+// --- Data loading ---
+
+async function loadCountryFile(metric, country) {
+  const res = await fetch(`data/country/${metric}/${country}.json`);
+  return res.json();
+}
+
+async function loadGlobalYear(metric, year) {
+  const res = await fetch(`data/glregion/${metric}/Global/${year}/none.json`);
+  return res.json();
+}
+
+function labelFor(metric, code) {
+  return metricLabels[metric][code] || String(code);
+}
+
+function buildSeries(rows, labelKeys) {
+  const byLabel = {};
+  labelKeys.forEach((code) => {
+    byLabel[labelFor(currentMetric, code)] = new Array(years.length).fill(null);
+  });
+
+  rows.forEach((row) => {
+    const label = labelFor(currentMetric, row.value_label);
+    const yearIndex = years.indexOf(row.year);
+    if (yearIndex !== -1 && byLabel[label] !== undefined) {
+      byLabel[label][yearIndex] = Math.round(row.pct * 100) / 100;
+    }
+  });
+
+  return Object.entries(byLabel).map(([label, values]) => ({ label, values }));
+}
+
+async function loadAllData() {
+  const countryRows = await loadCountryFile(currentMetric, currentCountry);
+
+  // Determine the full set of years present, sorted ascending
+  years = [...new Set(countryRows.map((r) => r.year))].sort((a, b) => a - b);
+
+  const labelKeys = Object.keys(metricLabels[currentMetric]).map(Number);
+
+  // "own" panel: filtered to the selected dimension/value
+  const ownRows = countryRows.filter(
+    (r) => r.dimension === currentDimension && r.dimension_value === currentDimensionValue
+  );
+  chartData.own = buildSeries(ownRows, labelKeys);
+
+  // "country" panel: dimension === "none" (overall country average)
+  const countryAvgRows = countryRows.filter(
+    (r) => r.dimension === "none" && r.dimension_value === "none"
+  );
+  chartData.country = buildSeries(countryAvgRows, labelKeys);
+
+  // "global" panel: one glregion fetch per year, dimension_1/2 === "none"
+  const globalRowsPerYear = await Promise.all(
+    years.map((year) => loadGlobalYear(currentMetric, year))
+  );
+  const globalRows = globalRowsPerYear.flat().filter(
+    (r) => r.dimension_2 === "none" && r.dimension_2_value === "none"
+  );
+  chartData.global = buildSeries(globalRows, labelKeys);
+}
+
+// --- D3 chart drawing ---
 
 function drawChart(svgSelector, seriesData) {
   const svg = d3.select(svgSelector);
@@ -42,10 +113,11 @@ function drawChart(svgSelector, seriesData) {
     .range([margin.left, width - margin.right]);
 
   const y = d3.scaleLinear()
-    .domain([0, 60])
+    .domain([0, 100])
     .range([height - margin.bottom, margin.top]);
 
   const line = d3.line()
+    .defined((d) => d !== null)
     .x((d, i) => x(years[i]))
     .y((d) => y(d));
 
@@ -65,18 +137,19 @@ function drawChart(svgSelector, seriesData) {
     svg.append("path")
       .datum(series.values)
       .attr("fill", "none")
-      .attr("stroke", colors[series.label])
+      .attr("stroke", colors[series.label] || "#fff")
       .attr("stroke-width", 2.5)
       .attr("d", line);
 
     svg.selectAll(`.dot-${series.label.replace(/\W/g, "")}`)
       .data(series.values)
       .enter()
+      .filter((d) => d !== null)
       .append("circle")
       .attr("cx", (d, i) => x(years[i]))
       .attr("cy", (d) => y(d))
       .attr("r", 3)
-      .attr("fill", colors[series.label]);
+      .attr("fill", colors[series.label] || "#fff");
   });
 }
 
@@ -87,10 +160,10 @@ const panelIds = {
 };
 
 function redrawPanel(key) {
-  drawChart(`svg[data-series="${key}"]`, fakeData[key]);
+  drawChart(`svg[data-series="${key}"]`, chartData[key]);
 }
 
-// Crossfade logic:
+// --- Crossfade logic:
 // 1. Fade OUT every panel (opacity -> 0), wait for the fade to finish.
 // 2. While invisible, instantly resize panels to the new stage AND
 //    redraw their chart content at the new size (no visible deformation,
@@ -161,30 +234,33 @@ function handleStepEnter(response) {
 
 const scroller = scrollama();
 
-scroller
-  .setup({
-    step: ".step",
-    offset: 0.5,
-    debug: false
-  })
-  .onStepEnter(handleStepEnter);
+// Wait for data to load before enabling scroll-triggered drawing
+loadAllData().then(() => {
+  scroller
+    .setup({
+      step: ".step",
+      offset: 0.5,
+      debug: false
+    })
+    .onStepEnter(handleStepEnter);
 
-window.addEventListener("resize", () => {
-  scroller.resize();
-  ["own", "country", "global"].forEach((key) => {
-    const panel = document.getElementById(panelIds[key]);
-    if (panel.classList.contains("visible")) redrawPanel(key);
+  window.addEventListener("resize", () => {
+    scroller.resize();
+    ["own", "country", "global"].forEach((key) => {
+      const panel = document.getElementById(panelIds[key]);
+      if (panel.classList.contains("visible")) redrawPanel(key);
+    });
   });
-});
 
-categoryLinks.forEach((link) => {
-  link.addEventListener("click", () => {
-    const category = link.dataset.category;
-    const firstStepOfCategory = document.querySelector(
-      `.step[data-category="${category}"]`
-    );
-    if (firstStepOfCategory) {
-      firstStepOfCategory.scrollIntoView({ behavior: "smooth" });
-    }
+  categoryLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      const category = link.dataset.category;
+      const firstStepOfCategory = document.querySelector(
+        `.step[data-category="${category}"]`
+      );
+      if (firstStepOfCategory) {
+        firstStepOfCategory.scrollIntoView({ behavior: "smooth" });
+      }
+    });
   });
 });
