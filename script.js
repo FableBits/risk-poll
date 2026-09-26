@@ -25,8 +25,8 @@ const colors = {
   "More safe": "#ff5db1",
   "Less safe": "#3ddc97",
   "About as safe": "#ffd23f",
-  "Don't know": "#888",
-  "Refused": "#555"
+  "Don't know": "#7aa2f7",
+  "Refused": "#c084fc"
 };
 
 let years = [];
@@ -41,7 +41,10 @@ async function loadCountryFile(metric, country) {
 
 async function loadGlobalYear(metric, year) {
   const res = await fetch(`data/glregion/${metric}/Global/${year}/none.json`);
-  return res.json();
+  const rows = await res.json();
+  // These files don't include a "year" field (it's implied by the folder),
+  // so we attach it manually here.
+  return rows.map((r) => ({ ...r, year }));
 }
 
 function labelFor(metric, code) {
