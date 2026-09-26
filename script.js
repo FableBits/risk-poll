@@ -40,11 +40,20 @@ async function loadCountryFile(metric, country) {
 }
 
 async function loadGlobalYear(metric, year) {
-  const res = await fetch(`data/glregion/${metric}/Global/${year}/none.json`);
-  const rows = await res.json();
-  // These files don't include a "year" field (it's implied by the folder),
-  // so we attach it manually here.
-  return rows.map((r) => ({ ...r, year }));
+  // Defensive: not every metric/year combination has a corresponding
+  // glregion file (e.g. some metrics are missing from certain years).
+  // If the file is missing or fails to parse, treat it as "no data for
+  // this year" rather than letting one bad fetch break the whole panel.
+  try {
+    const res = await fetch(`data/glregion/${metric}/Global/${year}/none.json`);
+    if (!res.ok) return [];
+    const rows = await res.json();
+    // These files don't include a "year" field (it's implied by the folder),
+    // so we attach it manually here.
+    return rows.map((r) => ({ ...r, year }));
+  } catch (e) {
+    return [];
+  }
 }
 
 function labelFor(metric, code) {
