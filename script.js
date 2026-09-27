@@ -384,13 +384,12 @@ async function handleStepEnter(response) {
   const type = stepEl.dataset.type;
   const metric = stepEl.dataset.metric;
 
-  titleEl.textContent = title;
-  titleEl.classList.remove("title-pulse");
-  void titleEl.offsetWidth; // force reflow so animation can retrigger
-  titleEl.classList.add("title-pulse");
-  setActiveCategory(category);
-
   if (metric && metric !== activeMetric) {
+    titleEl.textContent = title;
+    titleEl.classList.remove("title-pulse");
+    void titleEl.offsetWidth; // force reflow so animation can retrigger
+    titleEl.classList.add("title-pulse");
+    
     const myLoadToken = ++loadToken;
     const data = await ensureMetricLoaded(metric);
     if (myLoadToken !== loadToken) return; // a newer metric switch took over
@@ -398,6 +397,7 @@ async function handleStepEnter(response) {
     years = data.years;
     chartData = data.chartData;
   }
+  setActiveCategory(category);
 
   if (type === "reveal-1") showPanelsUpTo(1);
   if (type === "reveal-2") showPanelsUpTo(2);
