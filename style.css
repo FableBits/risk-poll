@@ -156,6 +156,14 @@ body {
   font-weight: bold;
 }
 
+#question-title.title-pulse {
+  animation: titleFlash 0.6s ease;
+}
+@keyframes titleFlash {
+  0% { color: #ff5db1; transform: scale(1.05); }
+  100% { color: #eee; transform: scale(1); }
+}
+
 @media (max-width: 600px) {
   #chart-area {
     height: 55vh;
