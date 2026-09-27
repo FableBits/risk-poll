@@ -17,21 +17,24 @@
   </ul>
 </nav>
 
-<div id="question-title">Do you feel safer than 5 years ago?</div>
+<div id="question-title">What is the single greatest risk to your safety?</div>
 
 <!-- Sticky chart area: this box itself never moves. -->
 <div id="chart-area">
   <div class="chart-panel" id="panel-own">
     <div class="panel-label">Your selection: France, Gender = Female</div>
     <svg class="chart-svg" data-series="own"></svg>
+    <div class="panel-legend" data-legend="own"></div>
   </div>
   <div class="chart-panel" id="panel-country">
     <div class="panel-label">Country average: France</div>
     <svg class="chart-svg" data-series="country"></svg>
+    <div class="panel-legend" data-legend="country"></div>
   </div>
   <div class="chart-panel" id="panel-global">
     <div class="panel-label">Global average</div>
     <svg class="chart-svg" data-series="global"></svg>
+    <div class="panel-legend" data-legend="global"></div>
   </div>
 </div>
 
@@ -39,12 +42,16 @@
 
   <div class="step" data-category="main-risks" data-title="Category intro: Main Risks" data-type="category-intro">
     <p>Category intro text: Main Risks (a few sentences here eventually).
-    Scroll down to see the chart test for "Do you feel safer than 5 years ago?"</p>
+    Scroll down to see the chart test for "What is the single greatest risk to your safety?"</p>
   </div>
 
-  <div class="step" data-category="main-risks" data-title="Do you feel safer than 5 years ago?" data-type="reveal-1"></div>
-  <div class="step" data-category="main-risks" data-title="Do you feel safer than 5 years ago?" data-type="reveal-2"></div>
-  <div class="step" data-category="main-risks" data-title="Do you feel safer than 5 years ago?" data-type="reveal-3"></div>
+  <div class="step" data-category="main-risks" data-metric="Greatest_Risk" data-title="What is the single greatest risk to your safety?" data-type="reveal-1"></div>
+  <div class="step" data-category="main-risks" data-metric="Greatest_Risk" data-title="What is the single greatest risk to your safety?" data-type="reveal-2"></div>
+  <div class="step" data-category="main-risks" data-metric="Greatest_Risk" data-title="What is the single greatest risk to your safety?" data-type="reveal-3"></div>
+
+  <div class="step" data-category="main-risks" data-metric="More_Safe" data-title="Do you feel safer than 5 years ago?" data-type="reveal-1"></div>
+  <div class="step" data-category="main-risks" data-metric="More_Safe" data-title="Do you feel safer than 5 years ago?" data-type="reveal-2"></div>
+  <div class="step" data-category="main-risks" data-metric="More_Safe" data-title="Do you feel safer than 5 years ago?" data-type="reveal-3"></div>
 
   <div class="step" data-category="main-risks" data-title="End of test" data-type="category-intro">
     <p>End of D3 chart test. This step exists just so the previous chart
