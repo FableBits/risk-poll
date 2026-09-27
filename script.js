@@ -237,8 +237,9 @@ function drawChart(svgSelector, seriesData) {
     .domain(years)
     .range([margin.left, width - margin.right]);
 
+  const maxVal = d3.max(seriesData.flatMap(s => s.values.filter(v => v !== null))) || 10;
   const y = d3.scaleLinear()
-    .domain([0, 100])
+    .domain([0, Math.min(100, maxVal * 1.2)]) // 20% headroom, capped at 100
     .range([height - margin.bottom, margin.top]);
 
   const line = d3.line()
@@ -265,6 +266,18 @@ function drawChart(svgSelector, seriesData) {
       .attr("stroke", colorScale(series.label))
       .attr("stroke-width", 2.5)
       .attr("d", line);
+
+    svg.selectAll(`.label-${series.label.replace(/\W/g, "")}`)
+      .data(series.values)
+      .enter()
+      .filter((d) => d !== null)
+      .append("text")
+      .attr("x", (d, i) => x(years[i]))
+      .attr("y", (d) => y(d) - 8)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "9px")
+      .attr("fill", colorScale(series.label))
+      .text((d) => d);
 
     svg.selectAll(`.dot-${series.label.replace(/\W/g, "")}`)
       .data(series.values)
@@ -372,6 +385,9 @@ async function handleStepEnter(response) {
   const metric = stepEl.dataset.metric;
 
   titleEl.textContent = title;
+  titleEl.classList.remove("title-pulse");
+  void titleEl.offsetWidth; // force reflow so animation can retrigger
+  titleEl.classList.add("title-pulse");
   setActiveCategory(category);
 
   if (metric && metric !== activeMetric) {
