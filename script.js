@@ -385,10 +385,17 @@ async function handleStepEnter(response) {
   const metric = stepEl.dataset.metric;
 
   if (metric && metric !== activeMetric) {
-    titleEl.textContent = title;
-    titleEl.classList.remove("title-pulse");
-    void titleEl.offsetWidth; // force reflow so animation can retrigger
-    titleEl.classList.add("title-pulse");
+    titleEl.classList.remove("title-in", "title-out");
+    void titleEl.offsetWidth;
+    titleEl.classList.add("title-out");
+
+    titleEl.addEventListener("animationend", function swapIn() {
+      titleEl.removeEventListener("animationend", swapIn);
+      titleEl.textContent = title;
+      titleEl.classList.remove("title-out");
+      void titleEl.offsetWidth;
+      titleEl.classList.add("title-in");
+    }, { once: true });
     
     const myLoadToken = ++loadToken;
     const data = await ensureMetricLoaded(metric);
