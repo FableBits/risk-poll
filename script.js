@@ -47,7 +47,32 @@ const metricsConfig = {
     skipYears: [],
     excludeFromRanking: [],
     topN: null // show every category, no ranking/trimming
-  }
+  },
+  Worried_Food: {
+    labels: {
+      1: "Very worried",
+      2: "Somewhat worried",
+      3: "Not worried",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [],
+    excludeFromRanking: [],
+    topN: null // show every category, no ranking/trimming
+  },
+  Exp2Y_Food: {
+    labels: {
+      1: "Personally experienced",
+      2: "Know someone who has experienced",
+      3: "Personally and know someone",
+      4: "No",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [],
+    excludeFromRanking: [],
+    topN: null // show every category, no ranking/trimming
+  },
 };
 
 // --- Config for current test: place and selected dimension ---
@@ -208,10 +233,15 @@ async function loadMetricData(metric) {
 
 // --- Metric switching / caching ---
 const dataCache = {}; // metric -> { years, chartData }
-let activeMetric = null;
-let years = [];
-let chartData = { own: [], country: [], global: [] };
 let loadToken = 0;
+
+// Per-side state: "main" drives the single chart-area (Main Risks/More_Safe),
+// "worry"/"experience" drive the split chart-area.
+const sideState = {
+  main:       { metric: null, years: [], chartData: { own: [], country: [], global: [] } },
+  worry:      { metric: null, years: [], chartData: { own: [], country: [], global: [] } },
+  experience: { metric: null, years: [], chartData: { own: [], country: [], global: [] } }
+};
 
 async function ensureMetricLoaded(metric) {
   if (!dataCache[metric]) {
@@ -222,7 +252,7 @@ async function ensureMetricLoaded(metric) {
 
 // --- D3 chart drawing ---
 
-function drawChart(svgSelector, seriesData) {
+function drawChart(svgSelector, seriesData, chartYears) {
   const svg = d3.select(svgSelector);
   svg.selectAll("*").remove();
 
@@ -234,7 +264,7 @@ function drawChart(svgSelector, seriesData) {
   svg.attr("viewBox", `0 0 ${width} ${height}`);
 
   const x = d3.scalePoint()
-    .domain(years)
+    .domain(chartYears)
     .range([margin.left, width - margin.right]);
 
   const maxVal = d3.max(seriesData.flatMap(s => s.values.filter(v => v !== null))) || 10;
@@ -244,7 +274,7 @@ function drawChart(svgSelector, seriesData) {
 
   const line = d3.line()
     .defined((d) => d !== null)
-    .x((d, i) => x(years[i]))
+    .x((d, i) => x(chartYears[i]))
     .y((d) => y(d));
 
   svg.append("g")
@@ -315,12 +345,20 @@ function renderLegend(key, seriesData) {
 const panelIds = {
   own: "panel-own",
   country: "panel-country",
-  global: "panel-global"
+  global: "panel-global",
+  "own-worry": "panel-own-worry",
+  "country-worry": "panel-country-worry",
+  "global-worry": "panel-global-worry",
+  "own-experience": "panel-own-experience",
+  "country-experience": "panel-country-experience",
+  "global-experience": "panel-global-experience"
 };
 
-function redrawPanel(key) {
-  drawChart(`svg[data-series="${key}"]`, chartData[key]);
-  renderLegend(key, chartData[key]);
+function redrawPanel(key, side = "main") {
+  const panelKey = side === "main" ? key : key.replace(`-${side}`, "");
+  const data = sideState[side].chartData[panelKey];
+  drawChart(`svg[data-series="${key}"]`, data, sideState[side].years);
+  renderLegend(key, data);
 }
 
 // --- Crossfade logic:
@@ -331,9 +369,10 @@ function redrawPanel(key) {
 // 3. Fade IN the panels that should be visible at this stage.
 let transitionToken = 0;
 
-function showPanelsUpTo(stage) {
-  const myToken = ++transitionToken; // guards against overlapping transitions
-  const allKeys = ["own", "country", "global"];
+function showPanelsUpTo(stage, side = "main") {
+  const myToken = ++transitionToken;
+  const suffix = side === "main" ? "" : `-${side}`;
+  const allKeys = ["own", "country", "global"].map((k) => k + suffix);
   const allPanels = allKeys.map((k) => document.getElementById(panelIds[k]));
 
   // Step 1: fade everything out
@@ -353,7 +392,7 @@ function showPanelsUpTo(stage) {
     requestAnimationFrame(() => {
       if (myToken !== transitionToken) return;
       allKeys.forEach((key, i) => {
-        if ((i + 1) <= stage) redrawPanel(key);
+        if ((i + 1) <= stage) redrawPanel(key, side);
       });
 
       // Step 3: fade the correct panels back in
@@ -382,13 +421,17 @@ async function handleStepEnter(response) {
   const title = stepEl.dataset.title;
   const category = stepEl.dataset.category;
   const type = stepEl.dataset.type;
-  const metric = stepEl.dataset.metric;
+  const isSplit = category === "worry-experience";
 
-  if (metric && metric !== activeMetric) {
+  document.getElementById("chart-area").classList.toggle("active", !isSplit);
+  document.getElementById("split-chart-area").classList.toggle("active", isSplit);
+
+  const stage = type === "reveal-1" ? 1 : type === "reveal-2" ? 2 : type === "reveal-3" ? 3 : 0;
+
+  function playTitleSwap() {
     titleEl.classList.remove("title-in", "title-out");
     void titleEl.offsetWidth;
     titleEl.classList.add("title-out");
-
     titleEl.addEventListener("animationend", function swapIn() {
       titleEl.removeEventListener("animationend", swapIn);
       titleEl.textContent = title;
@@ -396,29 +439,49 @@ async function handleStepEnter(response) {
       void titleEl.offsetWidth;
       titleEl.classList.add("title-in");
     }, { once: true });
-    
-    const myLoadToken = ++loadToken;
-    const data = await ensureMetricLoaded(metric);
-    if (myLoadToken !== loadToken) return; // a newer metric switch took over
-    activeMetric = metric;
-    years = data.years;
-    chartData = data.chartData;
   }
-  setActiveCategory(category);
 
-  if (type === "reveal-1") showPanelsUpTo(1);
-  if (type === "reveal-2") showPanelsUpTo(2);
-  if (type === "reveal-3") showPanelsUpTo(3);
-  if (type === "category-intro") showPanelsUpTo(0);
+  if (!isSplit) {
+    const metric = stepEl.dataset.metric;
+    if (metric && metric !== sideState.main.metric) {
+      playTitleSwap();
+      const myLoadToken = ++loadToken;
+      const data = await ensureMetricLoaded(metric);
+      if (myLoadToken !== loadToken) return;
+      sideState.main.metric = metric;
+      sideState.main.years = data.years;
+      sideState.main.chartData = data.chartData;
+    }
+    setActiveCategory(category);
+    showPanelsUpTo(stage, "main");
+  } else {
+    const worryMetric = stepEl.dataset.metricWorry;
+    const expMetric = stepEl.dataset.metricExperience;
+    if (worryMetric !== sideState.worry.metric || expMetric !== sideState.experience.metric) {
+      playTitleSwap();
+    }
+    const myLoadToken = ++loadToken;
+    const [worryData, expData] = await Promise.all([
+      worryMetric ? ensureMetricLoaded(worryMetric) : null,
+      expMetric ? ensureMetricLoaded(expMetric) : null
+    ]);
+    if (myLoadToken !== loadToken) return;
+    if (worryData) { sideState.worry.metric = worryMetric; sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; }
+    if (expData) { sideState.experience.metric = expMetric; sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; }
+
+    setActiveCategory(category);
+    showPanelsUpTo(stage, "worry");
+    showPanelsUpTo(stage, "experience");
+  }
 }
 
 const scroller = scrollama();
 
 // Preload the first metric before enabling scroll-triggered drawing
 ensureMetricLoaded("Greatest_Risk").then((data) => {
-  activeMetric = "Greatest_Risk";
-  years = data.years;
-  chartData = data.chartData;
+  sideState.main.metric = "Greatest_Risk";
+  sideState.main.years = data.years;
+  sideState.main.chartData = data.chartData;
 
   scroller
     .setup({
