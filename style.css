@@ -28,6 +28,11 @@ body {
   gap: 8px;
 }
 
+#split-chart-area { display: none; }
+#split-chart-area.active { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.chart-half { display: flex; flex-direction: column; gap: 8px; }
+.chart-half-title { text-align:center; font-weight:bold; color:#aaa; font-size:0.95rem; }
+
 /* Each panel: resizing (flex-grow) happens INSTANTLY (no transition),
    while opacity fades smoothly. This means the resize always happens
    while the panel is invisible, so no visible squeeze/distortion -
