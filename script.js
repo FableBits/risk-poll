@@ -302,7 +302,7 @@ function drawChart(svgSelector, seriesData, chartYears) {
       .enter()
       .filter((d) => d !== null)
       .append("text")
-      .attr("x", (d, i) => x(years[i]))
+      .attr("x", (d, i) => x(chartYears[i]))
       .attr("y", (d) => y(d) - 8)
       .attr("text-anchor", "middle")
       .attr("font-size", "9px")
@@ -314,7 +314,7 @@ function drawChart(svgSelector, seriesData, chartYears) {
       .enter()
       .filter((d) => d !== null)
       .append("circle")
-      .attr("cx", (d, i) => x(years[i]))
+      .attr("cx", (d, i) => x(chartYears[i]))
       .attr("cy", (d) => y(d))
       .attr("r", 3)
       .attr("fill", colorScale(series.label));
@@ -367,10 +367,10 @@ function redrawPanel(key, side = "main") {
 //    redraw their chart content at the new size (no visible deformation,
 //    since nothing is visible at this moment).
 // 3. Fade IN the panels that should be visible at this stage.
-let transitionToken = 0;
+let transitionTokens = { main: 0, worry: 0, experience: 0 };
 
 function showPanelsUpTo(stage, side = "main") {
-  const myToken = ++transitionToken;
+  const myToken = ++transitionTokens[side];
   const suffix = side === "main" ? "" : `-${side}`;
   const allKeys = ["own", "country", "global"].map((k) => k + suffix);
   const allPanels = allKeys.map((k) => document.getElementById(panelIds[k]));
@@ -379,7 +379,7 @@ function showPanelsUpTo(stage, side = "main") {
   allPanels.forEach((p) => p.classList.remove("shown"));
 
   setTimeout(() => {
-    if (myToken !== transitionToken) return; // a newer transition took over
+    if (myToken !== transitionTokens[side]) return; // a newer transition took over
 
     // Step 2: resize instantly (invisible) + redraw at final size
     allKeys.forEach((key, i) => {
@@ -390,14 +390,14 @@ function showPanelsUpTo(stage, side = "main") {
 
     // Let layout settle one frame before measuring/drawing
     requestAnimationFrame(() => {
-      if (myToken !== transitionToken) return;
+      if (myToken !== transitionTokens[side]) return;
       allKeys.forEach((key, i) => {
         if ((i + 1) <= stage) redrawPanel(key, side);
       });
 
       // Step 3: fade the correct panels back in
       requestAnimationFrame(() => {
-        if (myToken !== transitionToken) return;
+        if (myToken !== transitionTokens[side]) return;
         allKeys.forEach((key, i) => {
           if ((i + 1) <= stage) allPanels[i].classList.add("shown");
         });
@@ -492,12 +492,20 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
     .onStepEnter(handleStepEnter);
 
   window.addEventListener("resize", () => {
-    scroller.resize();
-    ["own", "country", "global"].forEach((key) => {
-      const panel = document.getElementById(panelIds[key]);
-      if (panel.classList.contains("visible")) redrawPanel(key);
-    });
+  scroller.resize();
+  const allKeys = [
+    "own", "country", "global",
+    "own-worry", "country-worry", "global-worry",
+    "own-experience", "country-experience", "global-experience"
+  ];
+  allKeys.forEach((key) => {
+    const panel = document.getElementById(panelIds[key]);
+    if (panel.classList.contains("visible")) {
+      const side = key.includes("-worry") ? "worry" : key.includes("-experience") ? "experience" : "main";
+      redrawPanel(key, side);
+    }
   });
+});
 
   categoryLinks.forEach((link) => {
     link.addEventListener("click", () => {
