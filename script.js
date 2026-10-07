@@ -432,13 +432,13 @@ async function handleStepEnter(response) {
     titleEl.classList.remove("title-in", "title-out");
     void titleEl.offsetWidth;
     titleEl.classList.add("title-out");
-    titleEl.addEventListener("animationend", function swapIn() {
-      titleEl.removeEventListener("animationend", swapIn);
+    titleEl.onanimationend = () => {
+      titleEl.onanimationend = null;
       titleEl.textContent = title;
       titleEl.classList.remove("title-out");
       void titleEl.offsetWidth;
       titleEl.classList.add("title-in");
-    }, { once: true });
+    };
   }
 
   if (!isSplit) {
