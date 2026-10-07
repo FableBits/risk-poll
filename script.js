@@ -45,7 +45,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [],
+    excludeFromRanking: [99],
     topN: null // show every category, no ranking/trimming
   },
   Worried_Food: {
@@ -57,7 +57,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [],
+    excludeFromRanking: [99],
     topN: null // show every category, no ranking/trimming
   },
   Exp2Y_Food: {
@@ -69,8 +69,8 @@ const metricsConfig = {
       98: "Don't know",
       99: "Refused"
     },
-    skipYears: [],
-    excludeFromRanking: [],
+    skipYears: [2019],
+    excludeFromRanking: [99],
     topN: null // show every category, no ranking/trimming
   },
 };
@@ -234,6 +234,7 @@ async function loadMetricData(metric) {
 // --- Metric switching / caching ---
 const dataCache = {}; // metric -> { years, chartData }
 let loadToken = 0;
+let currentDisplayKey = null; // tracks whichever metric/combo is currently shown in the title
 
 // Per-side state: "main" drives the single chart-area (Main Risks/More_Safe),
 // "worry"/"experience" drive the split chart-area.
@@ -443,8 +444,9 @@ async function handleStepEnter(response) {
 
   if (!isSplit) {
     const metric = stepEl.dataset.metric;
-    if (metric && metric !== sideState.main.metric) {
+    if (metric && metric !== currentDisplayKey) {
       playTitleSwap();
+      currentDisplayKey = metric;
       const myLoadToken = ++loadToken;
       const data = await ensureMetricLoaded(metric);
       if (myLoadToken !== loadToken) return;
@@ -457,8 +459,10 @@ async function handleStepEnter(response) {
   } else {
     const worryMetric = stepEl.dataset.metricWorry;
     const expMetric = stepEl.dataset.metricExperience;
-    if (worryMetric !== sideState.worry.metric || expMetric !== sideState.experience.metric) {
+    const splitKey = `${worryMetric}|${expMetric}`;
+    if (splitKey !== currentDisplayKey) {
       playTitleSwap();
+      currentDisplayKey = splitKey;
     }
     const myLoadToken = ++loadToken;
     const [worryData, expData] = await Promise.all([
