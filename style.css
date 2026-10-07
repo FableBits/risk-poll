@@ -27,6 +27,7 @@ body {
   z-index: 1;
   gap: 8px;
 }
+#chart-area.active { display: flex; }
 
 #split-chart-area { display: none; }
 #split-chart-area.active { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
