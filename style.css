@@ -29,7 +29,19 @@ body {
 }
 #chart-area.active { display: flex; }
 
-#split-chart-area { display: none; }
+#split-chart-area {
+  display: none;
+  position: sticky;
+  top: 60px;
+  height: 65vh;
+  margin: 0 auto;
+  max-width: 1000px;
+  width: 92%;
+  background: #1a1a1a;
+  border: 2px dashed #444;
+  padding: 10px;
+  z-index: 1;
+}
 #split-chart-area.active { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .chart-half { display: flex; flex-direction: column; gap: 8px; }
 .chart-half-title { text-align:center; font-weight:bold; color:#aaa; font-size:0.95rem; }
