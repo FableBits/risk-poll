@@ -46,7 +46,7 @@ const metricsConfig = {
     },
     skipYears: [],
     excludeFromRanking: [99],
-    topN: null // show every category, no ranking/trimming
+    topN: null
   },
   Worried_Food: {
     labels: {
@@ -58,7 +58,7 @@ const metricsConfig = {
     },
     skipYears: [],
     excludeFromRanking: [99],
-    topN: null // show every category, no ranking/trimming
+    topN: null
   },
   Exp2Y_Food: {
     labels: {
@@ -71,7 +71,7 @@ const metricsConfig = {
     },
     skipYears: [2019],
     excludeFromRanking: [99],
-    topN: null // show every category, no ranking/trimming
+    topN: null
   },
   Worried_Water: {
     labels: {
@@ -83,7 +83,7 @@ const metricsConfig = {
     },
     skipYears: [],
     excludeFromRanking: [99],
-    topN: null // show every category, no ranking/trimming
+    topN: null
   },
   Exp2Y_Water: {
     labels: {
@@ -96,9 +96,9 @@ const metricsConfig = {
     },
     skipYears: [2019],
     excludeFromRanking: [99],
-    topN: null // show every category, no ranking/trimming
+    topN: null
   },
-  Discrim_Religion: {
+  Discrim_Color: {
     labels: {
       1: "Yes",
       2: "No",
@@ -108,7 +108,7 @@ const metricsConfig = {
     },
     skipYears: [2019],
     excludeFromRanking: [97, 99],
-    topN: null // show every category, no ranking/trimming
+    topN: null
   },
   Discrim_Gender: {
     labels: {
@@ -120,7 +120,7 @@ const metricsConfig = {
     },
     skipYears: [2019],
     excludeFromRanking: [97, 99],
-    topN: null // show every category, no ranking/trimming
+    topN: null
   },
   Resilience_idv: {
     labels: {
@@ -132,7 +132,7 @@ const metricsConfig = {
     },
     skipYears: [2019],
     excludeFromRanking: [],
-    topN: null // show every category, no ranking/trimming
+    topN: null
   },
   Resilience_com: {
     labels: {
@@ -144,7 +144,8 @@ const metricsConfig = {
     },
     skipYears: [2019],
     excludeFromRanking: [],
-    topN: null // show every category, no ranking/trimming
+    topN: null,
+    continuous: true
   },
 };
 
