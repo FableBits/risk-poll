@@ -34,7 +34,8 @@ const metricsConfig = {
     },
     skipYears: [2019], // 2019 uses an incompatible coding scheme for this metric
     excludeFromRanking: [22, 23, 98, 99],
-    topN: 5
+    topN: 5,
+    rankedOrder: true
   },
   More_Safe: {
     labels: {
@@ -219,10 +220,6 @@ async function loadGlobalYear(metric, year) {
   }
 }
 
-// Rank categories by their average pct across the given rows (already
-// scoped to years/dimension/etc. for one panel), excluding any codes the
-// metric config says shouldn't be eligible for ranking (e.g. DK/Refused).
-// Returns the top N codes (or all eligible codes if topN is null).
 function rankTopCodes(rows, metric) {
   const cfg = metricsConfig[metric];
   const sums = {};
@@ -239,8 +236,15 @@ function rankTopCodes(rows, metric) {
     .map(([code, { sum, count }]) => ({ code: Number(code), avg: sum / count }))
     .sort((a, b) => b.avg - a.avg);
 
-  const codes = ranked.map((d) => d.code);
-  return cfg.topN ? codes.slice(0, cfg.topN) : codes;
+  let codes = ranked.map((d) => d.code);
+  if (cfg.topN) codes = codes.slice(0, cfg.topN);
+
+  if (!cfg.rankedOrder) {
+    const configOrder = Object.keys(cfg.labels).map(Number);
+    codes = configOrder.filter((c) => codes.includes(c));
+  }
+
+  return codes;
 }
 
 function bucketScore(value) {
