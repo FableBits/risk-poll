@@ -124,11 +124,11 @@ const metricsConfig = {
   },
   Resilience_idv: {
     labels: {
-      0: "0% (Least resilient)",
-      0.25: "25%",
-      0.5: "50%",
-      0.75: "75%",
-      1: "100% (Most resilient)"
+      0: "Least resilient",
+      0.25: "Mildly Resilient",
+      0.5: "Moderately Resilient",
+      0.75: "Very Resilient",
+      1: "Most resilient"
     },
     skipYears: [2019],
     excludeFromRanking: [],
@@ -136,11 +136,11 @@ const metricsConfig = {
   },
   Resilience_com: {
     labels: {
-      0: "0-0.2 (Least resilient)",
-      0.25: "0.2-0.4",
-      0.5: "0.4-0.6",
-      0.75: "0.6-0.8",
-      1: "0.8-1 (Most resilient)"
+      0-0.2: "Least Resilient",
+      0.2-0.4: "Mildly Resilient",
+      0.4-0.6: "Moderately Resilient",
+      0.6-0.8: "Very Resilient",
+      0.8-1: "Most Reilient"
     },
     skipYears: [2019],
     excludeFromRanking: [],
