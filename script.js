@@ -73,6 +73,79 @@ const metricsConfig = {
     excludeFromRanking: [99],
     topN: null // show every category, no ranking/trimming
   },
+  Worried_Water: {
+    labels: {
+      1: "Very worried",
+      2: "Somewhat worried",
+      3: "Not worried",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [],
+    excludeFromRanking: [99],
+    topN: null // show every category, no ranking/trimming
+  },
+  Exp2Y_Water: {
+    labels: {
+      1: "Personally experienced",
+      2: "Know someone who has experienced",
+      3: "Personally and know someone",
+      4: "No",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [99],
+    topN: null // show every category, no ranking/trimming
+  },
+  Discrim_Religion: {
+    labels: {
+      1: "Yes",
+      2: "No",
+      97: "Does not apply",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [97, 99],
+    topN: null // show every category, no ranking/trimming
+  },
+  Discrim_Gender: {
+    labels: {
+      1: "Yes",
+      2: "No",
+      97: "Does not apply",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [97, 99],
+    topN: null // show every category, no ranking/trimming
+  },
+  Resilience_idv: {
+    labels: {
+      0: "0% (Least resilient)",
+      0.25: "25%",
+      0.5: "50%",
+      0.75: "75%",
+      1: "100% (Most resilient)"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [],
+    topN: null // show every category, no ranking/trimming
+  },
+  Resilience_com: {
+    labels: {
+      0: "0-0.2 (Least resilient)",
+      0.25: "0.2-0.4",
+      0.5: "0.4-0.6",
+      0.75: "0.6-0.8",
+      1: "0.8-1 (Most resilient)"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [],
+    topN: null // show every category, no ranking/trimming
+  },
 };
 
 // --- Config for current test: place and selected dimension ---
@@ -169,6 +242,27 @@ function rankTopCodes(rows, metric) {
   return cfg.topN ? codes.slice(0, cfg.topN) : codes;
 }
 
+function bucketScore(value) {
+  if (value < 0.2) return 0;
+  if (value < 0.4) return 0.25;
+  if (value < 0.6) return 0.5;
+  if (value < 0.8) return 0.75;
+  return 1;
+}
+
+function bucketRows(rows) {
+  const grouped = {};
+  rows.forEach((row) => {
+    const bucket = bucketScore(Number(row.value_label));
+    const key = `${row.year}|${row.dimension}|${row.dimension_value}|${bucket}`;
+    if (!grouped[key]) {
+      grouped[key] = { ...row, value_label: bucket, pct: 0 };
+    }
+    grouped[key].pct += row.pct;
+  });
+  return Object.values(grouped);
+}
+
 function buildSeries(rows, codes, metric, years) {
   const byLabel = {};
   codes.forEach((code) => {
@@ -194,7 +288,8 @@ async function loadMetricData(metric) {
 
   // Drop any years this metric excludes (e.g. incompatible coding scheme)
   // before we even compute which years exist.
-  const countryRows = rawCountryRows.filter((r) => !cfg.skipYears.includes(r.year));
+  let countryRows = rawCountryRows.filter((r) => !cfg.skipYears.includes(r.year));
+  if (cfg.continuous) countryRows = bucketRows(countryRows);
 
   const years = [...new Set(countryRows.map((r) => r.year))].sort((a, b) => a - b);
 
@@ -212,9 +307,10 @@ async function loadMetricData(metric) {
   const globalRowsPerYear = await Promise.all(
     years.map((year) => loadGlobalYear(metric, year))
   );
-  const globalRows = globalRowsPerYear
+  let globalRows = globalRowsPerYear
     .flat()
     .filter((r) => r.dimension_2 === "none" && r.dimension_2_value === "none");
+  if (cfg.continuous) globalRows = bucketRows(globalRows);
 
   // Each panel picks its own top categories independently, ranked by
   // average pct across the included years.
