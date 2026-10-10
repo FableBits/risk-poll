@@ -123,6 +123,111 @@ body {
   z-index: 2;
 }
 
+/* --- Place / dimension controls ---
+   Dark, editorial styling to match the rest of the piece: no native
+   grey "Excel" chrome, just flat dark surfaces, thin hairline borders,
+   and the same pink accent used elsewhere (#ff5db1) for active/focus
+   states. Sits just under the sticky title, above the chart area. */
+#controls-bar {
+  position: sticky;
+  top: 58px;
+  z-index: 2;
+  background: #111;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 18px;
+  padding: 10px 16px 16px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.control-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+}
+
+#mode-toggle {
+  flex-direction: row;
+  gap: 0;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.mode-btn {
+  appearance: none;
+  border: none;
+  background: #1a1a1a;
+  color: #999;
+  font-family: inherit;
+  font-size: 0.78rem;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.mode-btn + .mode-btn {
+  border-left: 1px solid #333;
+}
+
+.mode-btn:hover {
+  color: #eee;
+}
+
+.mode-btn.active {
+  background: #ff5db1;
+  color: #1a1a1a;
+  font-weight: bold;
+}
+
+.styled-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #1a1a1a;
+  color: #eee;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 8px 30px 8px 12px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  min-width: 150px;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, #ff5db1 50%),
+                     linear-gradient(135deg, #ff5db1 50%, transparent 50%);
+  background-position: calc(100% - 16px) center, calc(100% - 11px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  transition: border-color 0.2s ease;
+}
+
+.styled-select:hover {
+  border-color: #666;
+}
+
+.styled-select:focus {
+  outline: none;
+  border-color: #ff5db1;
+}
+
+.styled-select option {
+  background: #1a1a1a;
+  color: #eee;
+}
+
+#dimension2-group.hidden {
+  display: none;
+}
+
 .step {
   position: relative;
   z-index: 3;
@@ -200,6 +305,14 @@ body {
   #question-title {
     font-size: 1.1rem;
     padding: 10px;
+  }
+  #controls-bar {
+    gap: 10px;
+    padding: 8px 10px 12px;
+  }
+  .styled-select {
+    min-width: 120px;
+    font-size: 0.72rem;
   }
   #category-nav {
     bottom: 10px;
