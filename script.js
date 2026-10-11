@@ -177,6 +177,20 @@ const dimensionValueLabels = {
   Urbanicity: { "1": "Rural area or small town", "2": "Large city or suburb" }
 };
 
+const DIMENSION_NAMES = Object.keys(dimensionValueLabels);
+
+// --- Reader-driven place/dimension selection ---
+// mode: "country" -> place is a country name, up to 1 dimension (dim1)
+// mode: "region"  -> place is a GLOBAL_REGIONS code (1-15), up to 2
+//                    dimensions (dim1 + dim2) can be combined
+const selection = {
+  mode: "country",
+  country: "France", // placeholder default until the dropdown is wired up
+  region: 1,          // placeholder default (Eastern Africa) for region mode
+  dim1: { name: "Gender", value: "2" }, // placeholder matches old sample
+  dim2: { name: null, value: null }     // region mode only
+};
+
 // Known poll years across the whole dataset. Used when falling back to
 // per-year country files (folder structure), since static hosting gives
 // us no directory listing to discover years dynamically.
@@ -219,12 +233,12 @@ async function loadCountryFile(metric, country) {
   return yearResults.flat();
 }
 
-async function loadGlobalYear(metric, year) {
+async function loadGlobalYear(metric, year, regionCode = "Global", dimensionName = "none") {
   // Defensive: not every metric/year combination has a corresponding
   // glregion file. Treat a missing/broken file as "no data for this
   // year" rather than letting one bad fetch break the whole panel.
   try {
-    const res = await fetch(`data/glregion/${metric}/Global/${year}/none.json`);
+    const res = await fetch(`data/glregion/${metric}/${regionCode}/${year}/${dimensionName}.json`);
     if (!res.ok) return [];
     const rows = await res.json();
     // These files don't include a "year" field (it's implied by the
@@ -304,24 +318,47 @@ function buildSeries(rows, codes, metric, years) {
 
 async function loadMetricData(metric) {
   const cfg = metricsConfig[metric];
-  const rawCountryRows = await loadCountryFile(metric, currentCountry);
+  const isRegionMode = selection.mode === "region";
+
+  let placeRows;
+  if (isRegionMode) {
+    // Region mode: fetch per-year glregion files for the selected region,
+    // using dim1 as the file's dimension (or "none" if no dim1 chosen).
+    const regionDimFile = selection.dim1.name || "none";
+    const rowsPerYear = await Promise.all(
+      ALL_KNOWN_YEARS.map((year) => loadGlobalYear(metric, year, selection.region, regionDimFile))
+    );
+    placeRows = rowsPerYear.flat();
+  } else {
+    placeRows = await loadCountryFile(metric, selection.country);
+  }
 
   // Drop any years this metric excludes (e.g. incompatible coding scheme)
   // before we even compute which years exist.
-  let countryRows = rawCountryRows.filter((r) => !cfg.skipYears.includes(r.year));
+  let countryRows = placeRows.filter((r) => !cfg.skipYears.includes(r.year));
   if (cfg.continuous) countryRows = bucketRows(countryRows);
 
   const years = [...new Set(countryRows.map((r) => r.year))].sort((a, b) => a - b);
 
-  // "own" panel: filtered to the selected dimension/value
-  const ownRows = countryRows.filter(
-    (r) => r.dimension === currentDimension && r.dimension_value === currentDimensionValue
-  );
+  // "own" panel: filtered to the selected dimension(s)/value(s).
+  // Country mode uses dim1 only; region mode can combine dim1 + dim2,
+  // matched against dimension_2/dimension_2_value in the fetched file.
+  const ownRows = countryRows.filter((r) => {
+    const dim1Match = r.dimension === selection.dim1.name && r.dimension_value === selection.dim1.value;
+    if (!isRegionMode) return dim1Match;
+    if (!selection.dim2.name) return dim1Match && r.dimension_2 === "none" && r.dimension_2_value === "none";
+    return dim1Match && r.dimension_2 === selection.dim2.name && r.dimension_2_value === selection.dim2.value;
+  });
 
-  // "country" panel: dimension === "none" (overall country average)
-  const countryAvgRows = countryRows.filter(
-    (r) => r.dimension === "none" && r.dimension_value === "none"
-  );
+  // "country"/"place average" panel: no dimensions at all (dimension ===
+  // "none" in both country and region mode - region files use "none.json"
+  // for this, fetched separately below since dim1 might differ).
+  const countryAvgRowsPerYear = isRegionMode
+    ? await Promise.all(years.map((year) => loadGlobalYear(metric, year, selection.region, "none")))
+    : null;
+  const countryAvgRows = isRegionMode
+    ? countryAvgRowsPerYear.flat().filter((r) => !cfg.skipYears.includes(r.year))
+    : countryRows.filter((r) => r.dimension === "none" && r.dimension_value === "none");
 
   // "global" panel: one glregion fetch per included year, dimension_2 === "none"
   const globalRowsPerYear = await Promise.all(
