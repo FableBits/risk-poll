@@ -150,16 +150,31 @@ const metricsConfig = {
   },
 };
 
-// --- Config for current test: place and selected dimension ---
-const currentCountry = "France";
-const currentDimension = "Gender";
-const currentDimensionValue = "2"; // stored as a numeric-looking string in the data
+const ALL_Countries = [
+  "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium", "Benin", "Bolivia", "Bosnia Herzegovina",
+  "Botswana", "Brazil", "Bulgaria", "Burkina Faso", "Cambodia", "Cameroon", "Canada", "Chad", "Chile", "China", "Colombia", "Congo Brazzaville", "Costa Rica", "Croatia", "Cyprus",
+  "Denmark", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Estonia", "Eswatini", "Ethiopia", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana",
+  "Greece", "Guatemala", "Guinea", "Honduras", "Hong Kong", "Hungary", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast", "Jamaica",
+  "Japan", "Jordan", "Kazakhstan", "Kenya", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Lithuania", "Luxembourg",
+  "Madagascar", "Malawi", "Malaysia", "Mali", "Malta", "Mauritania", "Mauritius", "Mexico", "Moldova", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia",
+  "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Pakistan", "Palestine", "Panama", "Paraguay", "Peru", "Philippines", "Poland",
+  "Portugal", "Romania", "Russia", "Rwanda", "Saudi Arabia", "Senegal", "Serbia", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "South Africa", "South Korea", "Spain", "Sri Lanka",
+  "Sweden", "Switzerland", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tunisia", "Turkey", "Turkmenistan", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States",
+  "Uruguay", "Uzbekistan", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe", "Global", "Czech Republic", "Iceland", "Comoros", "Congo Kinshasa", "Somalia", "Oman"
+];
+
+const GLOBAL_REGIONS = {
+  1: "Eastern Africa", 2: "Central/Western Africa", 3: "Northern Africa", 4: "Southern Africa", 5: "Latin America & the Caribbean",
+  6: "Northern America", 7: "Central Asia", 8: "Eastern Asia", 9: "Southeastern Asia", 10: "Southern Asia",
+  11: "Middle East", 12: "Eastern Europe", 13: "Northern/Western Europe", 14: "Southern Europe", 15: "Australia & New Zealand"
+};
 
 const dimensionValueLabels = {
-  Gender: {
-    "1": "Male",
-    "2": "Female"
-  }
+  Gender: { "1": "Male", "2": "Female" },
+  "Age Group": { "1": "15-29", "2": "30-49", "3": "50-64", "4": "65 and over" },
+  Education: { "1": "Primary or less (up to 8 years)", "2": "Secondary (9-15 years)", "3": "Tertiary (16 years or more)" },
+  "Income Group": { "1": "Poorest 20%", "2": "Second 20%", "3": "Middle 20%", "4": "Fourth 20%", "5": "Richest 20%" },
+  Urbanicity: { "1": "Rural area or small town", "2": "Large city or suburb" }
 };
 
 // Known poll years across the whole dataset. Used when falling back to
