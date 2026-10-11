@@ -111,6 +111,37 @@ body {
   display: inline-block;
 }
 
+/* Shared legend: one legend for all 3 panels in a chart-half/chart-area,
+   used whenever every panel shares the same fixed category list (i.e.
+   everything except Greatest_Risk, whose panels each rank their own
+   top-5 and therefore still need individual legends). */
+.shared-legend {
+  display: none; /* JS shows this and hides the per-panel ones, or vice versa */
+  flex-shrink: 0;
+  border-top: 1px solid #333;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+.shared-legend.visible {
+  display: flex;
+}
+
+.shared-legend .legend-item {
+  font-size: 0.85rem; /* bigger than the per-panel .legend-item (0.7rem) */
+}
+
+.shared-legend .legend-swatch {
+  width: 11px;
+  height: 11px;
+}
+
+/* Per-panel legends get a class toggle too, so JS can hide them cleanly
+   when the shared legend is active instead of them taking up space. */
+.panel-legend.panel-legend-hidden {
+  display: none;
+}
+
 /* Question title placeholder */
 #question-title {
   position: sticky;
@@ -367,7 +398,9 @@ body {
     width: 160px;
     font-size: 0.72rem;
   }
- 
+  .shared-legend .legend-item {
+    font-size: 0.75rem;
+  }
   .styled-select {
     min-width: 120px;
     font-size: 0.72rem;
