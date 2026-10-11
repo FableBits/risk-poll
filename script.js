@@ -150,7 +150,7 @@ const metricsConfig = {
   },
 };
 
-const ALL_Countries = [
+const ALL_COUNTRIES = [
   "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium", "Benin", "Bolivia", "Bosnia Herzegovina",
   "Botswana", "Brazil", "Bulgaria", "Burkina Faso", "Cambodia", "Cameroon", "Canada", "Chad", "Chile", "China", "Colombia", "Congo Brazzaville", "Costa Rica", "Croatia", "Cyprus",
   "Denmark", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Estonia", "Eswatini", "Ethiopia", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana",
@@ -160,7 +160,7 @@ const ALL_Countries = [
   "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Pakistan", "Palestine", "Panama", "Paraguay", "Peru", "Philippines", "Poland",
   "Portugal", "Romania", "Russia", "Rwanda", "Saudi Arabia", "Senegal", "Serbia", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "South Africa", "South Korea", "Spain", "Sri Lanka",
   "Sweden", "Switzerland", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tunisia", "Turkey", "Turkmenistan", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States",
-  "Uruguay", "Uzbekistan", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe", "Global", "Czech Republic", "Iceland", "Comoros", "Congo Kinshasa", "Somalia", "Oman"
+  "Uruguay", "Uzbekistan", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe", "Czech Republic", "Iceland", "Comoros", "Congo Kinshasa", "Somalia", "Oman"
 ];
 
 const GLOBAL_REGIONS = {
