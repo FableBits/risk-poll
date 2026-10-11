@@ -496,6 +496,33 @@ function renderLegend(key, seriesData) {
   });
 }
 
+const sharedLegendKeys = { main: "main-shared", worry: "worry-shared", experience: "experience-shared" };
+
+function applyLegendMode(side, metric) {
+  const suffix = side === "main" ? "" : `-${side}`;
+  const panelKeys = ["own", "country", "global"].map((k) => k + suffix);
+  const isGreatestRisk = metric === "Greatest_Risk";
+
+  // Per-panel legends: hidden whenever we're using the shared legend instead.
+  panelKeys.forEach((key) => {
+    const el = document.querySelector(`.panel-legend[data-legend="${key}"]`);
+    if (el) el.classList.toggle("panel-legend-hidden", !isGreatestRisk);
+  });
+
+  // Shared legend: shown + populated whenever all 3 panels use the same
+  // fixed category list (i.e. everything except Greatest_Risk).
+  const sharedEl = document.querySelector(`.panel-legend[data-legend="${sharedLegendKeys[side]}"]`);
+  if (!sharedEl) return;
+  sharedEl.classList.toggle("visible", !isGreatestRisk);
+  if (!isGreatestRisk) {
+    // All 3 panels share identical categories for these metrics, so any
+    // one panel's series (country panel is always populated) gives us
+    // the full label set.
+    const seriesData = sideState[side].chartData.country || [];
+    renderLegend(sharedLegendKeys[side], seriesData);
+  }
+}
+
 const panelIds = {
   own: "panel-own",
   country: "panel-country",
@@ -606,6 +633,7 @@ async function handleStepEnter(response) {
       sideState.main.metric = metric;
       sideState.main.years = data.years;
       sideState.main.chartData = data.chartData;
+      applyLegendMode("main", metric);
     }
     setActiveCategory(category);
     showPanelsUpTo(stage, "main");
@@ -623,8 +651,8 @@ async function handleStepEnter(response) {
       expMetric ? ensureMetricLoaded(expMetric) : null
     ]);
     if (myLoadToken !== loadToken) return;
-    if (worryData) { sideState.worry.metric = worryMetric; sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; }
-    if (expData) { sideState.experience.metric = expMetric; sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; }
+    if (worryData) { sideState.worry.metric = worryMetric; sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetric); }
+    if (expData) { sideState.experience.metric = expMetric; sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetric); }
 
     setActiveCategory(category);
     showPanelsUpTo(stage, "worry");
@@ -764,8 +792,9 @@ async function refreshCurrentStep() {
       expMetric ? loadMetricData(expMetric) : null
     ]);
     if (myLoadToken !== loadToken) return;
-    if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; }
-    if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; }
+    const [worryMetricName, expMetricName] = currentDisplayKey.split("|");
+    if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetricName); }
+    if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetricName); }
     ["own-worry", "country-worry", "global-worry", "own-experience", "country-experience", "global-experience"].forEach((key) => {
       const side = key.includes("-worry") ? "worry" : "experience";
       const panel = document.getElementById(panelIds[key]);
@@ -776,6 +805,7 @@ async function refreshCurrentStep() {
     if (myLoadToken !== loadToken) return;
     sideState.main.years = data.years;
     sideState.main.chartData = data.chartData;
+    applyLegendMode("main", currentDisplayKey);
     ["own", "country", "global"].forEach((key) => {
       const panel = document.getElementById(panelIds[key]);
       if (panel.classList.contains("visible")) redrawPanel(key, "main");
