@@ -676,3 +676,156 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
     });
   });
 });
+
+// --- Controls bar: populate dropdowns + wire interactions ---
+
+const modeButtons = document.querySelectorAll(".mode-btn");
+const placeSelect = document.getElementById("place-select");
+const placeSelectLabel = document.getElementById("place-select-label");
+const dim1Select = document.getElementById("dimension1-select");
+const dim1ValueSelect = document.getElementById("dimension1-value-select");
+const dim2Group = document.getElementById("dimension2-group");
+const dim2Select = document.getElementById("dimension2-select");
+const dim2ValueSelect = document.getElementById("dimension2-value-select");
+
+function populateSelect(selectEl, optionsMap, { includeNone = false, noneLabel = "None" } = {}) {
+  selectEl.innerHTML = "";
+  if (includeNone) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = noneLabel;
+    selectEl.appendChild(opt);
+  }
+  Object.entries(optionsMap).forEach(([value, label]) => {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = label;
+    selectEl.appendChild(opt);
+  });
+}
+
+function populatePlaceSelect() {
+  if (selection.mode === "country") {
+    placeSelectLabel.textContent = "Country";
+    const asMap = Object.fromEntries(ALL_COUNTRIES.map((c) => [c, c]));
+    populateSelect(placeSelect, asMap);
+    placeSelect.value = selection.country;
+  } else {
+    placeSelectLabel.textContent = "Global region";
+    populateSelect(placeSelect, GLOBAL_REGIONS);
+    placeSelect.value = String(selection.region);
+  }
+}
+
+function populateDimensionValueSelect(valueSelectEl, dimensionName, currentValue) {
+  if (!dimensionName) {
+    valueSelectEl.innerHTML = "";
+    valueSelectEl.disabled = true;
+    return;
+  }
+  valueSelectEl.disabled = false;
+  populateSelect(valueSelectEl, dimensionValueLabels[dimensionName]);
+  if (currentValue) valueSelectEl.value = currentValue;
+}
+
+function populateDimensionControls() {
+  const dimNameMap = Object.fromEntries(DIMENSION_NAMES.map((d) => [d, d]));
+
+  populateSelect(dim1Select, dimNameMap, { includeNone: true });
+  dim1Select.value = selection.dim1.name || "";
+  populateDimensionValueSelect(dim1ValueSelect, selection.dim1.name, selection.dim1.value);
+
+  dim2Group.classList.toggle("hidden", selection.mode !== "region");
+  if (selection.mode === "region") {
+    populateSelect(dim2Select, dimNameMap, { includeNone: true });
+    dim2Select.value = selection.dim2.name || "";
+    populateDimensionValueSelect(dim2ValueSelect, selection.dim2.name, selection.dim2.value);
+  }
+}
+
+function readDimensionFromControls(nameSelect, valueSelect) {
+  const name = nameSelect.value || null;
+  const value = name ? (valueSelect.value || null) : null;
+  return { name, value };
+}
+
+async function refreshCurrentStep() {
+  const myLoadToken = ++loadToken;
+  delete dataCache[currentDisplayKey]; // old cache key is now stale for this selection
+  Object.keys(dataCache).forEach((k) => delete dataCache[k]); // selection changed: whole cache is stale
+
+  const activeStep = document.querySelector(".step.is-active") || document.querySelector(".step");
+  // Re-run whichever side(s) are currently on screen by re-invoking the
+  // same logic handleStepEnter uses, keyed off scrollama's last-known step.
+  if (currentDisplayKey && currentDisplayKey.includes("|")) {
+    const [worryMetric, expMetric] = currentDisplayKey.split("|");
+    const [worryData, expData] = await Promise.all([
+      worryMetric ? loadMetricData(worryMetric) : null,
+      expMetric ? loadMetricData(expMetric) : null
+    ]);
+    if (myLoadToken !== loadToken) return;
+    if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; }
+    if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; }
+    ["own-worry", "country-worry", "global-worry", "own-experience", "country-experience", "global-experience"].forEach((key) => {
+      const side = key.includes("-worry") ? "worry" : "experience";
+      const panel = document.getElementById(panelIds[key]);
+      if (panel.classList.contains("visible")) redrawPanel(key, side);
+    });
+  } else if (currentDisplayKey) {
+    const data = await loadMetricData(currentDisplayKey);
+    if (myLoadToken !== loadToken) return;
+    sideState.main.years = data.years;
+    sideState.main.chartData = data.chartData;
+    ["own", "country", "global"].forEach((key) => {
+      const panel = document.getElementById(panelIds[key]);
+      if (panel.classList.contains("visible")) redrawPanel(key, "main");
+    });
+  }
+}
+
+modeButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    modeButtons.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    selection.mode = btn.dataset.mode;
+    populatePlaceSelect();
+    populateDimensionControls();
+    refreshCurrentStep();
+  });
+});
+
+placeSelect.addEventListener("change", () => {
+  if (selection.mode === "country") {
+    selection.country = placeSelect.value;
+  } else {
+    selection.region = Number(placeSelect.value);
+  }
+  refreshCurrentStep();
+});
+
+dim1Select.addEventListener("change", () => {
+  selection.dim1 = readDimensionFromControls(dim1Select, dim1ValueSelect);
+  populateDimensionValueSelect(dim1ValueSelect, selection.dim1.name, null);
+  selection.dim1.value = dim1ValueSelect.value || null;
+  refreshCurrentStep();
+});
+
+dim1ValueSelect.addEventListener("change", () => {
+  selection.dim1.value = dim1ValueSelect.value || null;
+  refreshCurrentStep();
+});
+
+dim2Select.addEventListener("change", () => {
+  selection.dim2 = readDimensionFromControls(dim2Select, dim2ValueSelect);
+  populateDimensionValueSelect(dim2ValueSelect, selection.dim2.name, null);
+  selection.dim2.value = dim2ValueSelect.value || null;
+  refreshCurrentStep();
+});
+
+dim2ValueSelect.addEventListener("change", () => {
+  selection.dim2.value = dim2ValueSelect.value || null;
+  refreshCurrentStep();
+});
+
+populatePlaceSelect();
+populateDimensionControls();
