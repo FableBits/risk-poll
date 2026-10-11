@@ -14,8 +14,8 @@ body {
    resize/appear, the box itself never moves or grows. */
 #chart-area {
   position: sticky;
-  top: 90px;
-  height: 85vh;
+  top: 100px;
+  height: 80vh;
   margin: 0 auto;
   max-width: 1300px; /* wider on desktop */
   width: 92%;
@@ -32,8 +32,8 @@ body {
 #split-chart-area {
   display: none;
   position: sticky;
-  top: 90px;
-  height: 85vh;
+  top: 100px;
+  height: 80vh;
   margin: 0 auto;
   max-width: 1300px;
   width: 92%;
@@ -138,7 +138,8 @@ body {
   align-items: flex-end;
   justify-content: center;
   gap: 18px;
-  padding: 10px 16px 16px;
+  /* padding: 10px 16px 16px; */
+  padding: 5px 8px 16px;
   border-bottom: 1px solid #2a2a2a;
 }
 
