@@ -23,26 +23,30 @@
      (a country + 1 dimension, or a global region + up to 2 dimensions)
      instead of the fixed France/Gender sample used while prototyping. -->
 <div id="controls-bar">
-  <div id="mode-toggle" class="control-group">
-    <button type="button" class="mode-btn active" data-mode="country">Country</button>
-    <button type="button" class="mode-btn" data-mode="region">Global region</button>
+  <div class="controls-row" id="controls-row-place">
+    <div id="mode-toggle" class="control-group">
+      <button type="button" class="mode-btn active" data-mode="country">Country</button>
+      <button type="button" class="mode-btn" data-mode="region">Global region</button>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="place-select" id="place-select-label">Country</label>
+      <select id="place-select" class="styled-select place-select"></select>
+    </div>
   </div>
 
-  <div class="control-group">
-    <label class="control-label" for="place-select" id="place-select-label">Country</label>
-    <select id="place-select" class="styled-select"></select>
-  </div>
+  <div class="controls-row" id="controls-row-dimensions">
+    <div class="control-group">
+      <label class="control-label" for="dimension1-select">Dimension 1</label>
+      <select id="dimension1-select" class="styled-select dim-select"></select>
+      <select id="dimension1-value-select" class="styled-select dim-value-select"></select>
+    </div>
 
-  <div class="control-group">
-    <label class="control-label" for="dimension1-select">Dimension 1</label>
-    <select id="dimension1-select" class="styled-select"></select>
-    <select id="dimension1-value-select" class="styled-select"></select>
-  </div>
-
-  <div class="control-group" id="dimension2-group">
-    <label class="control-label" for="dimension2-select">Dimension 2</label>
-    <select id="dimension2-select" class="styled-select"></select>
-    <select id="dimension2-value-select" class="styled-select"></select>
+    <div class="control-group" id="dimension2-group">
+      <label class="control-label" for="dimension2-select">Dimension 2</label>
+      <select id="dimension2-select" class="styled-select dim-select"></select>
+      <select id="dimension2-value-select" class="styled-select dim-value-select"></select>
+    </div>
   </div>
 </div>
 
