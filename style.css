@@ -14,8 +14,8 @@ body {
    resize/appear, the box itself never moves or grows. */
 #chart-area {
   position: sticky;
-  top: 200px;
-  height: 80vh;
+  top: 180px;
+  height: 70vh;
   margin: 0 auto;
   max-width: 1300px; /* wider on desktop */
   width: 92%;
