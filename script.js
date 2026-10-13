@@ -316,6 +316,14 @@ function buildSeries(rows, codes, metric, years) {
   return Object.entries(byLabel).map(([label, values]) => ({ label, values }));
 }
 
+const bar = document.getElementById('controls-bar');
+const chart = document.getElementById('chart-area');
+function syncChartTop() {
+  chart.style.top = (58 + bar.offsetHeight + 8) + 'px';
+}
+syncChartTop();
+window.addEventListener('resize', syncChartTop);
+
 async function loadMetricData(metric) {
   const cfg = metricsConfig[metric];
   const isRegionMode = selection.mode === "region";
@@ -496,6 +504,35 @@ function renderLegend(key, seriesData) {
   });
 }
 
+function describeSelection() {
+  const place = selection.mode === "country" ? selection.country : GLOBAL_REGIONS[selection.region];
+
+  const dims = [];
+  if (selection.dim1.name && selection.dim1.value) {
+    dims.push(`${selection.dim1.name} = ${dimensionValueLabels[selection.dim1.name][selection.dim1.value]}`);
+  }
+  if (selection.mode === "region" && selection.dim2.name && selection.dim2.value) {
+    dims.push(`${selection.dim2.name} = ${dimensionValueLabels[selection.dim2.name][selection.dim2.value]}`);
+  }
+
+  return { place, dimText: dims.join(", ") };
+}
+
+function updatePanelLabels(side) {
+  const suffix = side === "main" ? "" : `-${side}`;
+  const { place, dimText } = describeSelection();
+
+  const ownEl = document.getElementById(`panel-label-own${suffix}`);
+  const countryEl = document.getElementById(`panel-label-country${suffix}`);
+
+  if (ownEl) ownEl.textContent = `Your selection: ${place}${dimText ? ", " + dimText : ""}`;
+  if (countryEl) {
+    countryEl.textContent = selection.mode === "country"
+      ? `Country average: ${place}`
+      : `Region average: ${place}`;
+  }
+}
+
 const sharedLegendKeys = { main: "main-shared", worry: "worry-shared", experience: "experience-shared" };
 
 function applyLegendMode(side, metric) {
@@ -634,6 +671,7 @@ async function handleStepEnter(response) {
       sideState.main.years = data.years;
       sideState.main.chartData = data.chartData;
       applyLegendMode("main", metric);
+      updatePanelLabels("main");
     }
     setActiveCategory(category);
     showPanelsUpTo(stage, "main");
@@ -651,8 +689,8 @@ async function handleStepEnter(response) {
       expMetric ? ensureMetricLoaded(expMetric) : null
     ]);
     if (myLoadToken !== loadToken) return;
-    if (worryData) { sideState.worry.metric = worryMetric; sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetric); }
-    if (expData) { sideState.experience.metric = expMetric; sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetric); }
+    if (worryData) { sideState.worry.metric = worryMetric; sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetric); updatePanelLabels("main"); }
+    if (expData) { sideState.experience.metric = expMetric; sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetric); updatePanelLabels("main"); }
 
     setActiveCategory(category);
     showPanelsUpTo(stage, "worry");
@@ -793,8 +831,8 @@ async function refreshCurrentStep() {
     ]);
     if (myLoadToken !== loadToken) return;
     const [worryMetricName, expMetricName] = currentDisplayKey.split("|");
-    if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetricName); }
-    if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetricName); }
+    if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetricName); updatePanelLabels("main"); }
+    if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetricName); updatePanelLabels("main"); }
     ["own-worry", "country-worry", "global-worry", "own-experience", "country-experience", "global-experience"].forEach((key) => {
       const side = key.includes("-worry") ? "worry" : "experience";
       const panel = document.getElementById(panelIds[key]);
@@ -859,3 +897,4 @@ dim2ValueSelect.addEventListener("change", () => {
 
 populatePlaceSelect();
 populateDimensionControls();
+updatePanelLabels("main");
