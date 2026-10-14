@@ -834,8 +834,8 @@ async function refreshCurrentStep() {
     ]);
     if (myLoadToken !== loadToken) return;
     const [worryMetricName, expMetricName] = currentDisplayKey.split("|");
-    if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetricName); updatePanelLabels("main"); }
-    if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetricName); updatePanelLabels("main"); }
+    if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetricName); updatePanelLabels("worry"); }
+    if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetricName); updatePanelLabels("experience"); }
     ["own-worry", "country-worry", "global-worry", "own-experience", "country-experience", "global-experience"].forEach((key) => {
       const side = key.includes("-worry") ? "worry" : "experience";
       const panel = document.getElementById(panelIds[key]);
@@ -847,6 +847,7 @@ async function refreshCurrentStep() {
     sideState.main.years = data.years;
     sideState.main.chartData = data.chartData;
     applyLegendMode("main", currentDisplayKey);
+    updatePanelLabels("main");
     ["own", "country", "global"].forEach((key) => {
       const panel = document.getElementById(panelIds[key]);
       if (panel.classList.contains("visible")) redrawPanel(key, "main");
