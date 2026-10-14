@@ -318,8 +318,11 @@ function buildSeries(rows, codes, metric, years) {
 
 const bar = document.getElementById('controls-bar');
 const chart = document.getElementById('chart-area');
+const splitChart = document.getElementById('split-chart-area');
 function syncChartTop() {
-  chart.style.top = (58 + bar.offsetHeight + 8) + 'px';
+  const top = (58 + bar.offsetHeight + 8) + 'px';
+  chart.style.top = top;
+  splitChart.style.top = top;
 }
 syncChartTop();
 window.addEventListener('resize', syncChartTop);
