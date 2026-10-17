@@ -49,6 +49,29 @@ const metricsConfig = {
     excludeFromRanking: [99],
     topN: null
   },
+  Disaster5Y: {
+    labels: {
+      1: "Yes",
+      2: "No",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [],
+    excludeFromRanking: [99],
+    topN: null
+  },
+    Climate_Change: {
+    labels: {
+      1: "Very serious threat",
+      2: " Somewhat serious threat",
+      3: " Not a threat at all ",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [],
+    excludeFromRanking: [99],
+    topN: null
+  },
   Worried_Food: {
     labels: {
       1: "Very worried",
