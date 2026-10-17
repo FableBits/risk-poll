@@ -122,6 +122,106 @@ const metricsConfig = {
     excludeFromRanking: [99],
     topN: null
   },
+  Worried_Crime: {
+    labels: {
+      1: "Very worried",
+      2: "Somewhat worried",
+      3: "Not worried",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [],
+    excludeFromRanking: [99],
+    topN: null
+  },
+  Exp2Y_Crime: {
+    labels: {
+      1: "Personally experienced",
+      2: "Know someone who has experienced",
+      3: "Personally and know someone",
+      4: "No",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [99],
+    topN: null
+  },
+  Worried_Weather: {
+    labels: {
+      1: "Very worried",
+      2: "Somewhat worried",
+      3: "Not worried",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [],
+    excludeFromRanking: [99],
+    topN: null
+  },
+  Exp2Y_Weather: {
+    labels: {
+      1: "Personally experienced",
+      2: "Know someone who has experienced",
+      3: "Personally and know someone",
+      4: "No",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [99],
+    topN: null
+  },
+  Worried_Mental: {
+    labels: {
+      1: "Very worried",
+      2: "Somewhat worried",
+      3: "Not worried",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [],
+    excludeFromRanking: [99],
+    topN: null
+  },
+  Exp2Y_Mental: {
+    labels: {
+      1: "Personally experienced",
+      2: "Know someone who has experienced",
+      3: "Personally and know someone",
+      4: "No",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [99],
+    topN: null
+  },
+  Worried_Work: {
+    labels: {
+      1: "Very worried",
+      2: "Somewhat worried",
+      3: "Not worried",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [99],
+    topN: null
+  },
+  Exp2Y_Work: {
+    labels: {
+      1: "Personally experienced",
+      2: "Know someone who has experienced",
+      3: "Personally and know someone",
+      4: "No",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [99],
+    topN: null
+  },
   Discrim_Color: {
     labels: {
       1: "Yes",
