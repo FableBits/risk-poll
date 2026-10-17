@@ -246,6 +246,42 @@ const metricsConfig = {
     excludeFromRanking: [97, 99],
     topN: null
   },
+  Discirm_Reliigon: {
+    labels: {
+      1: "Yes",
+      2: "No",
+      97: "Does not apply",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [97, 99],
+    topN: null
+  },
+  Discrim_Ethnic: {
+    labels: {
+      1: "Yes",
+      2: "No",
+      97: "Does not apply",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [97, 99],
+    topN: null
+  },
+  Discrim_Disability: {
+    labels: {
+      1: "Yes",
+      2: "No",
+      97: "Does not apply",
+      98: "Don't know",
+      99: "Refused"
+    },
+    skipYears: [2019],
+    excludeFromRanking: [97, 99],
+    topN: null
+  },
   Resilience_idv: {
     labels: {
       1: "Most Resilient",
@@ -258,7 +294,33 @@ const metricsConfig = {
     excludeFromRanking: [],
     topN: null
   },
+  Resilience_hhl: {
+    labels: {
+      1: "Most Resilient",
+      0.75: "Very Resilient",
+      0.5: "Moderately Resilient",
+      0.25: "Mildly Resilient",
+      0: "Least Resilient"      
+    },
+    skipYears: [2019],
+    excludeFromRanking: [],
+    topN: null,
+    continuous: true
+  },
   Resilience_com: {
+    labels: {
+      1: "Most Resilient",
+      0.75: "Very Resilient",
+      0.5: "Moderately Resilient",
+      0.25: "Mildly Resilient",
+      0: "Least Resilient"      
+    },
+    skipYears: [2019],
+    excludeFromRanking: [],
+    topN: null,
+    continuous: true
+  },
+  Resilience_soc: {
     labels: {
       1: "Most Resilient",
       0.75: "Very Resilient",
