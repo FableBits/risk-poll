@@ -46,7 +46,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Disaster5Y: {
@@ -57,7 +57,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
     Climate_Change: {
@@ -69,7 +69,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Worried_Food: {
@@ -81,7 +81,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Exp2Y_Food: {
@@ -94,7 +94,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Worried_Water: {
@@ -106,7 +106,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Exp2Y_Water: {
@@ -119,7 +119,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Worried_Crime: {
@@ -131,7 +131,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Exp2Y_Crime: {
@@ -144,7 +144,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Worried_Weather: {
@@ -156,7 +156,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Exp2Y_Weather: {
@@ -169,7 +169,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Worried_Mental: {
@@ -181,7 +181,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Exp2Y_Mental: {
@@ -194,7 +194,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Worried_Work: {
@@ -206,7 +206,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Exp2Y_Work: {
@@ -219,7 +219,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [99],
+    excludeFromRanking: [98, 99],
     topN: null
   },
   Discrim_Color: {
@@ -231,7 +231,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [97, 99],
+    excludeFromRanking: [97, 98, 99],
     topN: null
   },
   Discrim_Gender: {
@@ -243,7 +243,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [97, 99],
+    excludeFromRanking: [97, 98, 99],
     topN: null
   },
   Discirm_Reliigon: {
@@ -255,7 +255,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [97, 99],
+    excludeFromRanking: [97, 98, 99],
     topN: null
   },
   Discrim_Ethnic: {
@@ -267,7 +267,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [97, 99],
+    excludeFromRanking: [97, 98, 99],
     topN: null
   },
   Discrim_Disability: {
@@ -279,7 +279,7 @@ const metricsConfig = {
       99: "Refused"
     },
     skipYears: [2019],
-    excludeFromRanking: [97, 99],
+    excludeFromRanking: [97, 98, 99],
     topN: null
   },
   Resilience_idv: {
