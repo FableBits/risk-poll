@@ -517,10 +517,30 @@ async function loadMetricData(metric) {
   const isRegionMode = selection.mode === "region";
 
   let placeRows;
+  let fileDim, otherDim; // fileDim = whichever dimension we fetch the file for; otherDim = the dimension_2 filter
   if (isRegionMode) {
-    // Region mode: fetch per-year glregion files for the selected region,
-    // using dim1 as the file's dimension (or "none" if no dim1 chosen).
-    const regionDimFile = selection.dim1.name || "none";
+    // Region mode: the export only generated each dimension PAIR once,
+    // ordered by DIMENSION_NAMES. So regardless of which dropdown (dim1
+    // or dim2) the reader put a dimension in, we must always fetch the
+    // file for whichever one comes FIRST in that canonical order, and
+    // treat the other as the dimension_2 filter - otherwise the file
+    // simply won't contain that pairing.
+    if (selection.dim1.name && selection.dim2.name) {
+      const i1 = DIMENSION_NAMES.indexOf(selection.dim1.name);
+      const i2 = DIMENSION_NAMES.indexOf(selection.dim2.name);
+      if (i1 <= i2) {
+        fileDim = selection.dim1;
+        otherDim = selection.dim2;
+      } else {
+        fileDim = selection.dim2;
+        otherDim = selection.dim1;
+      }
+    } else {
+      fileDim = selection.dim1;
+      otherDim = { name: null, value: null };
+    }
+
+    const regionDimFile = fileDim.name || "none";
     const rowsPerYear = await Promise.all(
       ALL_KNOWN_YEARS.map((year) => loadGlobalYear(metric, year, selection.region, regionDimFile))
     );
@@ -540,10 +560,12 @@ async function loadMetricData(metric) {
   // Country mode uses dim1 only; region mode can combine dim1 + dim2,
   // matched against dimension_2/dimension_2_value in the fetched file.
   const ownRows = countryRows.filter((r) => {
-    const dim1Match = r.dimension === selection.dim1.name && r.dimension_value === selection.dim1.value;
-    if (!isRegionMode) return dim1Match;
-    if (!selection.dim2.name) return dim1Match && r.dimension_2 === "none" && r.dimension_2_value === "none";
-    return dim1Match && r.dimension_2 === selection.dim2.name && r.dimension_2_value === selection.dim2.value;
+    if (!isRegionMode) {
+      return r.dimension === selection.dim1.name && r.dimension_value === selection.dim1.value;
+    }
+    const fileDimMatch = r.dimension === fileDim.name && r.dimension_value === fileDim.value;
+    if (!otherDim.name) return fileDimMatch && r.dimension_2 === "none" && r.dimension_2_value === "none";
+    return fileDimMatch && r.dimension_2 === otherDim.name && r.dimension_2_value === otherDim.value;
   });
 
   // "country"/"place average" panel: no dimensions at all (dimension ===
@@ -985,13 +1007,29 @@ function populateDimensionValueSelect(valueSelectEl, dimensionName, currentValue
 function populateDimensionControls() {
   const dimNameMap = Object.fromEntries(DIMENSION_NAMES.map((d) => [d, d]));
 
-  populateSelect(dim1Select, dimNameMap, { includeNone: true });
-  dim1Select.value = selection.dim1.name || "";
+  // Dimension 1 is required in both modes (country-average/region-average
+  // panels already cover the "no dimension" case), so no "None" option here.
+  const dim1Options = selection.mode === "region" && selection.dim2.name
+    ? Object.fromEntries(DIMENSION_NAMES.filter((d) => d !== selection.dim2.name).map((d) => [d, d]))
+    : dimNameMap;
+  populateSelect(dim1Select, dim1Options);
+  if (!selection.dim1.name || !dim1Options[selection.dim1.name]) {
+    selection.dim1.name = Object.keys(dim1Options)[0];
+  }
+  dim1Select.value = selection.dim1.name;
   populateDimensionValueSelect(dim1ValueSelect, selection.dim1.name, selection.dim1.value);
+  if (!selection.dim1.value) {
+    selection.dim1.value = dim1ValueSelect.value || null;
+  }
 
   dim2Group.classList.toggle("hidden", selection.mode !== "region");
   if (selection.mode === "region") {
-    populateSelect(dim2Select, dimNameMap, { includeNone: true });
+    // Dimension 2 keeps "None" (user may want just one dimension), but
+    // excludes whatever is currently chosen as Dimension 1.
+    const dim2Options = Object.fromEntries(
+      DIMENSION_NAMES.filter((d) => d !== selection.dim1.name).map((d) => [d, d])
+    );
+    populateSelect(dim2Select, dim2Options, { includeNone: true });
     dim2Select.value = selection.dim2.name || "";
     populateDimensionValueSelect(dim2ValueSelect, selection.dim2.name, selection.dim2.value);
   }
@@ -1064,6 +1102,11 @@ dim1Select.addEventListener("change", () => {
   selection.dim1 = readDimensionFromControls(dim1Select, dim1ValueSelect);
   populateDimensionValueSelect(dim1ValueSelect, selection.dim1.name, null);
   selection.dim1.value = dim1ValueSelect.value || null;
+  // If dim2 was set to the same dimension we just picked for dim1, clear it.
+  if (selection.dim2.name === selection.dim1.name) {
+    selection.dim2 = { name: null, value: null };
+  }
+  populateDimensionControls(); // refresh dim2's excluded-options list
   refreshCurrentStep();
 });
 
@@ -1076,6 +1119,7 @@ dim2Select.addEventListener("change", () => {
   selection.dim2 = readDimensionFromControls(dim2Select, dim2ValueSelect);
   populateDimensionValueSelect(dim2ValueSelect, selection.dim2.name, null);
   selection.dim2.value = dim2ValueSelect.value || null;
+  populateDimensionControls(); // refresh dim1's excluded-options list
   refreshCurrentStep();
 });
 
