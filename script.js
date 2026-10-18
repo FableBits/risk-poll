@@ -428,7 +428,7 @@ async function loadGlobalYear(metric, year, regionCode = "Global", dimensionName
     const rows = await res.json();
     // These files don't include "year" or "dimension" fields (both are
     // implied by the folder/filename), so we attach them manually here.
-    return rows.map((r) => ({ ...r, year, dimension: dimensionName }));
+    return rows.map((r) => ({ ...r, year, dimension: dimensionName, dimension_value: r.dimension_1_value }));
   } catch (e) {
     return [];
   }
