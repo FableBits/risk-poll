@@ -426,9 +426,9 @@ async function loadGlobalYear(metric, year, regionCode = "Global", dimensionName
     const res = await fetch(`data/glregion/${metric}/${regionCode}/${year}/${dimensionName}.json`);
     if (!res.ok) return [];
     const rows = await res.json();
-    // These files don't include a "year" field (it's implied by the
-    // folder), so we attach it manually here.
-    return rows.map((r) => ({ ...r, year }));
+    // These files don't include "year" or "dimension" fields (both are
+    // implied by the folder/filename), so we attach them manually here.
+    return rows.map((r) => ({ ...r, year, dimension: dimensionName }));
   } catch (e) {
     return [];
   }
