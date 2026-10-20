@@ -953,7 +953,7 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
         `.step[data-category="${category}"]`
       );
       if (firstStepOfCategory) {
-        firstStepOfCategory.scrollIntoView({ behavior: "smooth" });
+        firstStepOfCategory.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     });
   });
