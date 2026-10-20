@@ -246,7 +246,7 @@ const metricsConfig = {
     excludeFromRanking: [97, 98, 99],
     topN: null
   },
-  Discirm_Reliigon: {
+  Discirm_Religion: {
     labels: {
       1: "Yes",
       2: "No",
@@ -851,8 +851,9 @@ async function handleStepEnter(response) {
   const type = stepEl.dataset.type;
   const isSplit = category === "worry-experience";
 
-  document.getElementById("chart-area").classList.toggle("active", !isSplit);
-  document.getElementById("split-chart-area").classList.toggle("active", isSplit);
+  const isIntro = type === "category-intro";
+  document.getElementById("chart-area").classList.toggle("active", !isSplit && !isIntro);
+  document.getElementById("split-chart-area").classList.toggle("active", isSplit && !isIntro);
 
   const stage = type === "reveal-1" ? 1 : type === "reveal-2" ? 2 : type === "reveal-3" ? 3 : 0;
 
