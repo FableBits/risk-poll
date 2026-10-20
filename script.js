@@ -871,9 +871,14 @@ async function handleStepEnter(response) {
 
   if (!isSplit) {
     const metric = stepEl.dataset.metric;
-    if (metric && metric !== currentDisplayKey) {
+    // Category-intro steps have a title but no metric - still swap the
+    // title for them, just skip the chart-loading logic that follows.
+    const titleKey = metric || `intro:${title}`;
+    if (titleKey !== currentDisplayKey) {
       playTitleSwap();
-      currentDisplayKey = metric;
+      currentDisplayKey = titleKey;
+    }
+    if (metric && currentDisplayKey === metric) {
       const myLoadToken = ++loadToken;
       const data = await ensureMetricLoaded(metric);
       if (myLoadToken !== loadToken) return;
