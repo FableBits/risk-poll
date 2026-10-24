@@ -387,7 +387,7 @@ body {
   100% { opacity: 1; filter: blur(0px); transform: translateY(0); }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 834px) {
   #chart-area {
     height: 55vh;
     max-width: 100%;
