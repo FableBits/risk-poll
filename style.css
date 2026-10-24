@@ -46,6 +46,18 @@ body {
 .chart-half { display: flex; flex-direction: column; gap: 8px; }
 .chart-half-title { text-align:center; font-weight:bold; color:#aaa; font-size:0.95rem; }
 
+@media (min-width: 1024px) {
+  #chart-area {
+    transform: translateX(-40px);
+  }
+}
+
+@media (min-width: 1024px) {
+  #split-chart-area {
+    transform: translateX(-40px);
+  }
+}
+
 /* Each panel: resizing (flex-grow) happens INSTANTLY (no transition),
    while opacity fades smoothly. This means the resize always happens
    while the panel is invisible, so no visible squeeze/distortion -
