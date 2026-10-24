@@ -157,7 +157,7 @@ body {
 /* Question title placeholder */
 #question-title {
   position: sticky;
-  top: 0;
+  top: 109px;
   background: #111;
   text-align: center;
   font-size: 1.4rem;
@@ -173,7 +173,7 @@ body {
    states. Sits just under the sticky title, above the chart area. */
 #controls-bar {
   position: sticky;
-  top: 58px;
+  top: 0;
   z-index: 2;
   background: #111;
   display: flex;
@@ -383,6 +383,7 @@ body {
     width: 100%;
   }
   #question-title {
+    top: 155px;
     font-size: 1.1rem;
     padding: 10px;
   }
