@@ -58,6 +58,22 @@ body {
   }
 }
 
+@media (min-width: 1600px) {
+  #chart-area {
+    transform: none;   /* cancels the -40px shift from the 1024px rule */
+    margin: 0 auto;
+    max-width: 1400px;
+  }
+}
+
+@media (min-width: 1600px) {
+  #split-chart-area {
+    transform: none;   /* cancels the -40px shift from the 1024px rule */
+    margin: 0 auto;
+    max-width: 1400px;
+  }
+}
+
 /* Each panel: resizing (flex-grow) happens INSTANTLY (no transition),
    while opacity fades smoothly. This means the resize always happens
    while the panel is invisible, so no visible squeeze/distortion -
