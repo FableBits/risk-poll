@@ -290,6 +290,7 @@ const metricsConfig = {
       0.25: "Mildly Resilient",
       0: "Least resilient"    
     },
+    order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
     excludeFromRanking: [],
     topN: null
@@ -302,6 +303,7 @@ const metricsConfig = {
       0.25: "Mildly Resilient",
       0: "Least Resilient"      
     },
+    order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
     excludeFromRanking: [],
     topN: null,
@@ -315,6 +317,7 @@ const metricsConfig = {
       0.25: "Mildly Resilient",
       0: "Least Resilient"      
     },
+    order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
     excludeFromRanking: [],
     topN: null,
@@ -328,6 +331,7 @@ const metricsConfig = {
       0.25: "Mildly Resilient",
       0: "Least Resilient"      
     },
+    order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
     excludeFromRanking: [],
     topN: null,
@@ -454,7 +458,7 @@ function rankTopCodes(rows, metric) {
   if (cfg.topN) codes = codes.slice(0, cfg.topN);
 
   if (!cfg.rankedOrder) {
-    const configOrder = Object.keys(cfg.labels).map(Number);
+    const configOrder = cfg.order || Object.keys(cfg.labels).map(Number);
     codes = configOrder.filter((c) => codes.includes(c));
   }
 
