@@ -328,6 +328,7 @@ body {
 .step[data-type="category-intro"] {
   height: 100vh;
   display: flex;
+  flex-direction: column;   /* stack the paragraphs vertically */
   align-items: center;
   justify-content: center;
   text-align: center;
