@@ -961,18 +961,32 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
       scroller.disable();
 
       let settled = false;
+      let lastY = window.scrollY;
+      let stableCount = 0;
+      
       const finishJump = () => {
         if (settled) return;
         settled = true;
-        scrollEl.removeEventListener("scrollend", finishJump);
+        clearInterval(pollId);
         scroller.enable();
         handleStepEnter({ element: firstStepOfCategory, direction: "down" });
       };
 
-      const scrollEl = window;
-      scrollEl.addEventListener("scrollend", finishJump, { once: true });
-      // Fallback in case "scrollend" isn't supported by the browser.
-      setTimeout(finishJump, 700);
+      // Poll scroll position instead of relying on a single scrollend
+      // event, which can fire early due to leftover scroll momentum.
+      const pollId = setInterval(() => {
+        const y = window.scrollY;
+        if (Math.abs(y - lastY) < 1) {
+          stableCount++;
+          if (stableCount >= 3) finishJump(); // ~150ms of no movement
+        } else {
+          stableCount = 0;
+        }
+        lastY = y;
+      }, 50);
+
+      // Hard fallback in case something goes wrong.
+      setTimeout(finishJump, 1500);
 
       firstStepOfCategory.scrollIntoView({ behavior: "smooth", block: "center" });
     });
