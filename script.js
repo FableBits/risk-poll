@@ -952,11 +952,31 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
       const firstStepOfCategory = document.querySelector(
         `.step[data-category="${category}"]`
       );
-      if (firstStepOfCategory) {
-        firstStepOfCategory.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      if (!firstStepOfCategory) return;
+
+      // Smooth scrolling crosses intermediate steps, causing scrollama to
+      // fire onStepEnter repeatedly (blinking) and sometimes settle on the
+      // wrong step. So: disable scrollama for the duration of the jump,
+      // scroll, then manually trigger the correct step once settled.
+      scroller.disable();
+
+      let settled = false;
+      const finishJump = () => {
+        if (settled) return;
+        settled = true;
+        scrollEl.removeEventListener("scrollend", finishJump);
+        scroller.enable();
+        handleStepEnter({ element: firstStepOfCategory, direction: "down" });
+      };
+
+      const scrollEl = window;
+      scrollEl.addEventListener("scrollend", finishJump, { once: true });
+      // Fallback in case "scrollend" isn't supported by the browser.
+      setTimeout(finishJump, 700);
+
+      firstStepOfCategory.scrollIntoView({ behavior: "smooth", block: "center" });
     });
-  });
+  });       
 });
 
 // --- Controls bar: populate dropdowns + wire interactions ---
