@@ -489,7 +489,7 @@ function bucketRows(rows) {
 function buildSeries(rows, codes, metric, years) {
   const byLabel = {};
   codes.forEach((code) => {
-    byLabel[labelFor(metric, code)] = new Array(years.length).fill(null);
+    byLabel[labelFor(metric, code)] = new Array(years.length).fill(0);
   });
 
   rows.forEach((row) => {
