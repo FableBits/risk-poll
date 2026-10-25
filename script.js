@@ -466,10 +466,10 @@ function rankTopCodes(rows, metric) {
 }
 
 function bucketScore(value) {
-  if (value < 0.2) return 0;
-  if (value < 0.4) return 0.25;
-  if (value < 0.6) return 0.5;
-  if (value < 0.8) return 0.75;
+  if (value < 0.125) return 0;
+  if (value < 0.375) return 0.25;
+  if (value < 0.625) return 0.5;
+  if (value < 0.875) return 0.75;
   return 1;
 }
 
@@ -477,7 +477,7 @@ function bucketRows(rows) {
   const grouped = {};
   rows.forEach((row) => {
     const bucket = bucketScore(Number(row.value_label));
-    const key = `${row.year}|${row.dimension}|${row.dimension_value}|${bucket}`;
+    const key = `${row.year}|${row.dimension}|${row.dimension_value}|${row.dimension_2}|${row.dimension_2_value}|${bucket}`;
     if (!grouped[key]) {
       grouped[key] = { ...row, value_label: bucket, pct: 0 };
     }
