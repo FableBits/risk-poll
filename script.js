@@ -246,7 +246,7 @@ const metricsConfig = {
     excludeFromRanking: [97, 98, 99],
     topN: null
   },
-  Discirm_Reliigon: {
+  Discirm_Religion: {
     labels: {
       1: "Yes",
       2: "No",
@@ -290,6 +290,7 @@ const metricsConfig = {
       0.25: "Mildly Resilient",
       0: "Least resilient"    
     },
+    order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
     excludeFromRanking: [],
     topN: null
@@ -302,6 +303,7 @@ const metricsConfig = {
       0.25: "Mildly Resilient",
       0: "Least Resilient"      
     },
+    order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
     excludeFromRanking: [],
     topN: null,
@@ -315,6 +317,7 @@ const metricsConfig = {
       0.25: "Mildly Resilient",
       0: "Least Resilient"      
     },
+    order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
     excludeFromRanking: [],
     topN: null,
@@ -328,6 +331,7 @@ const metricsConfig = {
       0.25: "Mildly Resilient",
       0: "Least Resilient"      
     },
+    order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
     excludeFromRanking: [],
     topN: null,
@@ -428,7 +432,7 @@ async function loadGlobalYear(metric, year, regionCode = "Global", dimensionName
     const rows = await res.json();
     // These files don't include "year" or "dimension" fields (both are
     // implied by the folder/filename), so we attach them manually here.
-    return rows.map((r) => ({ ...r, year, dimension: dimensionName }));
+    return rows.map((r) => ({ ...r, year, dimension: dimensionName, dimension_value: r.dimension_1_value }));
   } catch (e) {
     return [];
   }
@@ -454,7 +458,7 @@ function rankTopCodes(rows, metric) {
   if (cfg.topN) codes = codes.slice(0, cfg.topN);
 
   if (!cfg.rankedOrder) {
-    const configOrder = Object.keys(cfg.labels).map(Number);
+    const configOrder = cfg.order || Object.keys(cfg.labels).map(Number);
     codes = configOrder.filter((c) => codes.includes(c));
   }
 
@@ -462,10 +466,10 @@ function rankTopCodes(rows, metric) {
 }
 
 function bucketScore(value) {
-  if (value < 0.2) return 0;
-  if (value < 0.4) return 0.25;
-  if (value < 0.6) return 0.5;
-  if (value < 0.8) return 0.75;
+  if (value < 0.125) return 0;
+  if (value < 0.375) return 0.25;
+  if (value < 0.625) return 0.5;
+  if (value < 0.875) return 0.75;
   return 1;
 }
 
@@ -473,7 +477,7 @@ function bucketRows(rows) {
   const grouped = {};
   rows.forEach((row) => {
     const bucket = bucketScore(Number(row.value_label));
-    const key = `${row.year}|${row.dimension}|${row.dimension_value}|${bucket}`;
+    const key = `${row.year}|${row.dimension}|${row.dimension_value}|${row.dimension_2}|${row.dimension_2_value}|${bucket}`;
     if (!grouped[key]) {
       grouped[key] = { ...row, value_label: bucket, pct: 0 };
     }
@@ -485,7 +489,7 @@ function bucketRows(rows) {
 function buildSeries(rows, codes, metric, years) {
   const byLabel = {};
   codes.forEach((code) => {
-    byLabel[labelFor(metric, code)] = new Array(years.length).fill(null);
+    byLabel[labelFor(metric, code)] = new Array(years.length).fill(0);
   });
 
   rows.forEach((row) => {
@@ -517,10 +521,30 @@ async function loadMetricData(metric) {
   const isRegionMode = selection.mode === "region";
 
   let placeRows;
+  let fileDim, otherDim; // fileDim = whichever dimension we fetch the file for; otherDim = the dimension_2 filter
   if (isRegionMode) {
-    // Region mode: fetch per-year glregion files for the selected region,
-    // using dim1 as the file's dimension (or "none" if no dim1 chosen).
-    const regionDimFile = selection.dim1.name || "none";
+    // Region mode: the export only generated each dimension PAIR once,
+    // ordered by DIMENSION_NAMES. So regardless of which dropdown (dim1
+    // or dim2) the reader put a dimension in, we must always fetch the
+    // file for whichever one comes FIRST in that canonical order, and
+    // treat the other as the dimension_2 filter - otherwise the file
+    // simply won't contain that pairing.
+    if (selection.dim1.name && selection.dim2.name) {
+      const i1 = DIMENSION_NAMES.indexOf(selection.dim1.name);
+      const i2 = DIMENSION_NAMES.indexOf(selection.dim2.name);
+      if (i1 <= i2) {
+        fileDim = selection.dim1;
+        otherDim = selection.dim2;
+      } else {
+        fileDim = selection.dim2;
+        otherDim = selection.dim1;
+      }
+    } else {
+      fileDim = selection.dim1;
+      otherDim = { name: null, value: null };
+    }
+
+    const regionDimFile = fileDim.name || "none";
     const rowsPerYear = await Promise.all(
       ALL_KNOWN_YEARS.map((year) => loadGlobalYear(metric, year, selection.region, regionDimFile))
     );
@@ -540,10 +564,12 @@ async function loadMetricData(metric) {
   // Country mode uses dim1 only; region mode can combine dim1 + dim2,
   // matched against dimension_2/dimension_2_value in the fetched file.
   const ownRows = countryRows.filter((r) => {
-    const dim1Match = r.dimension === selection.dim1.name && r.dimension_value === selection.dim1.value;
-    if (!isRegionMode) return dim1Match;
-    if (!selection.dim2.name) return dim1Match && r.dimension_2 === "none" && r.dimension_2_value === "none";
-    return dim1Match && r.dimension_2 === selection.dim2.name && r.dimension_2_value === selection.dim2.value;
+    if (!isRegionMode) {
+      return r.dimension === selection.dim1.name && r.dimension_value === selection.dim1.value;
+    }
+    const fileDimMatch = r.dimension === fileDim.name && r.dimension_value === fileDim.value;
+    if (!otherDim.name) return fileDimMatch && r.dimension_2 === "none" && r.dimension_2_value === "none";
+    return fileDimMatch && r.dimension_2 === otherDim.name && r.dimension_2_value === otherDim.value;
   });
 
   // "country"/"place average" panel: no dimensions at all (dimension ===
@@ -829,8 +855,9 @@ async function handleStepEnter(response) {
   const type = stepEl.dataset.type;
   const isSplit = category === "worry-experience";
 
-  document.getElementById("chart-area").classList.toggle("active", !isSplit);
-  document.getElementById("split-chart-area").classList.toggle("active", isSplit);
+  const isIntro = type === "category-intro";
+  document.getElementById("chart-area").classList.toggle("active", !isSplit && !isIntro);
+  document.getElementById("split-chart-area").classList.toggle("active", isSplit && !isIntro);
 
   const stage = type === "reveal-1" ? 1 : type === "reveal-2" ? 2 : type === "reveal-3" ? 3 : 0;
 
@@ -849,9 +876,14 @@ async function handleStepEnter(response) {
 
   if (!isSplit) {
     const metric = stepEl.dataset.metric;
-    if (metric && metric !== currentDisplayKey) {
+    // Category-intro steps have a title but no metric - still swap the
+    // title for them, just skip the chart-loading logic that follows.
+    const titleKey = metric || `intro:${title}`;
+    if (titleKey !== currentDisplayKey) {
       playTitleSwap();
-      currentDisplayKey = metric;
+      currentDisplayKey = titleKey;
+    }
+    if (metric && currentDisplayKey === metric) {
       const myLoadToken = ++loadToken;
       const data = await ensureMetricLoaded(metric);
       if (myLoadToken !== loadToken) return;
@@ -924,11 +956,45 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
       const firstStepOfCategory = document.querySelector(
         `.step[data-category="${category}"]`
       );
-      if (firstStepOfCategory) {
-        firstStepOfCategory.scrollIntoView({ behavior: "smooth" });
-      }
+      if (!firstStepOfCategory) return;
+
+      // Smooth scrolling crosses intermediate steps, causing scrollama to
+      // fire onStepEnter repeatedly (blinking) and sometimes settle on the
+      // wrong step. So: disable scrollama for the duration of the jump,
+      // scroll, then manually trigger the correct step once settled.
+      scroller.disable();
+
+      let settled = false;
+      let lastY = window.scrollY;
+      let stableCount = 0;
+      
+      const finishJump = () => {
+        if (settled) return;
+        settled = true;
+        clearInterval(pollId);
+        scroller.enable();
+        handleStepEnter({ element: firstStepOfCategory, direction: "down" });
+      };
+
+      // Poll scroll position instead of relying on a single scrollend
+      // event, which can fire early due to leftover scroll momentum.
+      const pollId = setInterval(() => {
+        const y = window.scrollY;
+        if (Math.abs(y - lastY) < 1) {
+          stableCount++;
+          if (stableCount >= 3) finishJump(); // ~150ms of no movement
+        } else {
+          stableCount = 0;
+        }
+        lastY = y;
+      }, 50);
+
+      // Hard fallback in case something goes wrong.
+      setTimeout(finishJump, 1500);
+
+      firstStepOfCategory.scrollIntoView({ behavior: "smooth", block: "center" });
     });
-  });
+  });       
 });
 
 // --- Controls bar: populate dropdowns + wire interactions ---
@@ -985,13 +1051,29 @@ function populateDimensionValueSelect(valueSelectEl, dimensionName, currentValue
 function populateDimensionControls() {
   const dimNameMap = Object.fromEntries(DIMENSION_NAMES.map((d) => [d, d]));
 
-  populateSelect(dim1Select, dimNameMap, { includeNone: true });
-  dim1Select.value = selection.dim1.name || "";
+  // Dimension 1 is required in both modes (country-average/region-average
+  // panels already cover the "no dimension" case), so no "None" option here.
+  const dim1Options = selection.mode === "region" && selection.dim2.name
+    ? Object.fromEntries(DIMENSION_NAMES.filter((d) => d !== selection.dim2.name).map((d) => [d, d]))
+    : dimNameMap;
+  populateSelect(dim1Select, dim1Options);
+  if (!selection.dim1.name || !dim1Options[selection.dim1.name]) {
+    selection.dim1.name = Object.keys(dim1Options)[0];
+  }
+  dim1Select.value = selection.dim1.name;
   populateDimensionValueSelect(dim1ValueSelect, selection.dim1.name, selection.dim1.value);
+  if (!selection.dim1.value) {
+    selection.dim1.value = dim1ValueSelect.value || null;
+  }
 
   dim2Group.classList.toggle("hidden", selection.mode !== "region");
   if (selection.mode === "region") {
-    populateSelect(dim2Select, dimNameMap, { includeNone: true });
+    // Dimension 2 keeps "None" (user may want just one dimension), but
+    // excludes whatever is currently chosen as Dimension 1.
+    const dim2Options = Object.fromEntries(
+      DIMENSION_NAMES.filter((d) => d !== selection.dim1.name).map((d) => [d, d])
+    );
+    populateSelect(dim2Select, dim2Options, { includeNone: true });
     dim2Select.value = selection.dim2.name || "";
     populateDimensionValueSelect(dim2ValueSelect, selection.dim2.name, selection.dim2.value);
   }
@@ -1064,6 +1146,11 @@ dim1Select.addEventListener("change", () => {
   selection.dim1 = readDimensionFromControls(dim1Select, dim1ValueSelect);
   populateDimensionValueSelect(dim1ValueSelect, selection.dim1.name, null);
   selection.dim1.value = dim1ValueSelect.value || null;
+  // If dim2 was set to the same dimension we just picked for dim1, clear it.
+  if (selection.dim2.name === selection.dim1.name) {
+    selection.dim2 = { name: null, value: null };
+  }
+  populateDimensionControls(); // refresh dim2's excluded-options list
   refreshCurrentStep();
 });
 
@@ -1076,6 +1163,7 @@ dim2Select.addEventListener("change", () => {
   selection.dim2 = readDimensionFromControls(dim2Select, dim2ValueSelect);
   populateDimensionValueSelect(dim2ValueSelect, selection.dim2.name, null);
   selection.dim2.value = dim2ValueSelect.value || null;
+  populateDimensionControls(); // refresh dim1's excluded-options list
   refreshCurrentStep();
 });
 

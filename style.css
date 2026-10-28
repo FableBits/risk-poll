@@ -17,7 +17,7 @@ body {
   top: 100px;
   height: 70vh;
   margin: 0 auto;
-  max-width: 1200px; /* wider on desktop */
+  max-width: 1250px; /* wider on desktop */
   width: 92%;
   background: #1a1a1a;
   border: 2px dashed #444;
@@ -35,7 +35,7 @@ body {
   top: 100px;
   height: 70vh;
   margin: 0 auto;
-  max-width: 1200px;
+  max-width: 1250px;
   width: 92%;
   background: #1a1a1a;
   border: 2px dashed #444;
@@ -45,6 +45,34 @@ body {
 #split-chart-area.active { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .chart-half { display: flex; flex-direction: column; gap: 8px; }
 .chart-half-title { text-align:center; font-weight:bold; color:#aaa; font-size:0.95rem; }
+
+@media (min-width: 1024px) {
+  #chart-area {
+    transform: translateX(-40px);
+  }
+}
+
+@media (min-width: 1024px) {
+  #split-chart-area {
+    transform: translateX(-40px);
+  }
+}
+
+@media (min-width: 1800px) {
+  #chart-area {
+    transform: none;   /* cancels the -40px shift from the 1024px rule */
+    margin: 0 auto;
+    max-width: 1400px;
+  }
+}
+
+@media (min-width: 1800px) {
+  #split-chart-area {
+    transform: none;   /* cancels the -40px shift from the 1024px rule */
+    margin: 0 auto;
+    max-width: 1400px;
+  }
+}
 
 /* Each panel: resizing (flex-grow) happens INSTANTLY (no transition),
    while opacity fades smoothly. This means the resize always happens
@@ -145,7 +173,7 @@ body {
 /* Question title placeholder */
 #question-title {
   position: sticky;
-  top: 0;
+  top: 109px;
   background: #111;
   text-align: center;
   font-size: 1.4rem;
@@ -161,7 +189,7 @@ body {
    states. Sits just under the sticky title, above the chart area. */
 #controls-bar {
   position: sticky;
-  top: 58px;
+  top: 0;
   z-index: 2;
   background: #111;
   display: flex;
@@ -300,6 +328,7 @@ body {
 .step[data-type="category-intro"] {
   height: 100vh;
   display: flex;
+  flex-direction: column;   /* stack the paragraphs vertically */
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -359,7 +388,7 @@ body {
   100% { opacity: 1; filter: blur(0px); transform: translateY(0); }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 834px) {
   #chart-area {
     height: 55vh;
     max-width: 100%;
@@ -371,6 +400,7 @@ body {
     width: 100%;
   }
   #question-title {
+    top: 155px;
     font-size: 1.1rem;
     padding: 10px;
   }
