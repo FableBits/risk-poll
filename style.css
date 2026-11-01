@@ -185,7 +185,7 @@ body {
 /* --- Place / dimension controls ---
    Dark, editorial styling to match the rest of the piece: no native
    grey "Excel" chrome, just flat dark surfaces, thin hairline borders,
-   and the same pink accent used elsewhere (#ff5db1) for active/focus
+   and the same pink accent used elsewhere (#ff2d4a) for active/focus
    states. Sits just under the sticky title, above the chart area. */
 #controls-bar {
   position: sticky;
@@ -264,7 +264,7 @@ body {
 }
 
 .mode-btn.active {
-  background: #ff5db1;
+  background: #ff2d4a;
   color: #1a1a1a;
   font-weight: bold;
 }
@@ -281,8 +281,8 @@ body {
   font-family: inherit;
   font-size: 0.8rem;
   cursor: pointer;
-  background-image: linear-gradient(45deg, transparent 50%, #ff5db1 50%),
-                     linear-gradient(135deg, #ff5db1 50%, transparent 50%);
+  background-image: linear-gradient(45deg, transparent 50%, #ff2d4a 50%),
+                     linear-gradient(135deg, #ff2d4a 50%, transparent 50%);
   background-position: calc(100% - 16px) center, calc(100% - 11px) center;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
@@ -307,7 +307,7 @@ body {
 
 .styled-select:focus {
   outline: none;
-  border-color: #ff5db1;
+  border-color: #ff2d4a;
 }
 
 .styled-select option {
@@ -367,7 +367,7 @@ body {
 }
 
 #category-nav li.active {
-  color: #ff5db1;
+  color: #ff2d4a;
   font-weight: bold;
 }
 
