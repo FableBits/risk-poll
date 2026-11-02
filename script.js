@@ -591,6 +591,20 @@ async function loadMetricData(metric) {
     .filter((r) => r.dimension_2 === "none" && r.dimension_2_value === "none");
   if (cfg.continuous) globalRows = bucketRows(globalRows);
 
+  // "dimglobal" panel: global average for the same dimension(s) as "own".
+  const gDim1 = isRegionMode ? fileDim : selection.dim1;
+  const gDim2 = isRegionMode ? otherDim : { name: null, value: null };
+  const dimGlobalPerYear = await Promise.all(
+    years.map((year) => loadGlobalYear(metric, year, "Global", gDim1.name))
+  );
+  let dimGlobalRows = dimGlobalPerYear.flat().filter((r) => {
+    if (r.dimension_value !== gDim1.value) return false;
+    if (!gDim2.name) return r.dimension_2 === "none" && r.dimension_2_value === "none";
+    return r.dimension_2 === gDim2.name && r.dimension_2_value === gDim2.value;
+  });
+  if (cfg.continuous) dimGlobalRows = bucketRows(dimGlobalRows);
+  const dimGlobalCodes = rankTopCodes(dimGlobalRows, metric);
+
   // Each panel picks its own top categories independently, ranked by
   // average pct across the included years.
   const ownCodes = rankTopCodes(ownRows, metric);
@@ -600,7 +614,8 @@ async function loadMetricData(metric) {
   const chartData = {
     own: buildSeries(ownRows, ownCodes, metric, years),
     country: buildSeries(countryAvgRows, countryCodes, metric, years),
-    global: buildSeries(globalRows, globalCodes, metric, years)
+    dimglobal: buildSeries(dimGlobalRows, dimGlobalCodes, metric, years),
+    global: buildSeries(globalRows, globalCodes, metric, years)   
   };
 
   return { years, chartData };
@@ -745,13 +760,15 @@ function updatePanelLabels(side) {
       ? `Country average: ${place}`
       : `Region average: ${place}`;
   }
+  const dimGlobalEl = document.getElementById(`panel-label-dimglobal${suffix}`);
+  if (dimGlobalEl) dimGlobalEl.textContent = `Global average${dimText ? ": " + dimText : ""}`;
 }
 
 const sharedLegendKeys = { main: "main-shared", worry: "worry-shared", experience: "experience-shared" };
 
 function applyLegendMode(side, metric) {
   const suffix = side === "main" ? "" : `-${side}`;
-  const panelKeys = ["own", "country", "global"].map((k) => k + suffix);
+  const panelKeys = ["own", "country", "dimglobal", "global"].map((k) => k + suffix);
   const isGreatestRisk = metric === "Greatest_Risk";
 
   // Per-panel legends: hidden whenever we're using the shared legend instead.
@@ -769,7 +786,10 @@ function applyLegendMode(side, metric) {
     // All 3 panels share identical categories for these metrics, so any
     // one panel's series (country panel is always populated) gives us
     // the full label set.
-    const seriesData = sideState[side].chartData.country || [];
+    const cd = sideState[side].chartData;
+    const seriesData = [cd.own, cd.country, cd.dimglobal, cd.global]
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length)[0] || [];
     renderLegend(sharedLegendKeys[side], seriesData);
   }
 }
@@ -777,12 +797,15 @@ function applyLegendMode(side, metric) {
 const panelIds = {
   own: "panel-own",
   country: "panel-country",
+  dimglobal: "panel-dimglobal",
   global: "panel-global",
   "own-worry": "panel-own-worry",
   "country-worry": "panel-country-worry",
+  "dimglobal-worry": "panel-dimglobal-worry",
   "global-worry": "panel-global-worry",
   "own-experience": "panel-own-experience",
   "country-experience": "panel-country-experience",
+  "dimglobal-experience": "panel-dimglobal-experience",
   "global-experience": "panel-global-experience"
 };
 
@@ -793,6 +816,11 @@ function redrawPanel(key, side = "main") {
   renderLegend(key, data);
 }
 
+// Which comparisons the reader has ticked, in scroll order.
+const comparisonOrder = ["country", "dimglobal", "global"];
+const enabledComparisons = new Set(comparisonOrder);
+const slotState = { main: null, worry: null, experience: null };
+
 // --- Crossfade logic:
 // 1. Fade OUT every panel (opacity -> 0), wait for the fade to finish.
 // 2. While invisible, instantly resize panels to the new stage AND
@@ -801,41 +829,56 @@ function redrawPanel(key, side = "main") {
 // 3. Fade IN the panels that should be visible at this stage.
 let transitionTokens = { main: 0, worry: 0, experience: 0 };
 
+// stage 1 = own panel alone; stages 2-4 = own + one comparison.
+// Own never fades after its first appearance; only the comparison swaps.
 function showPanelsUpTo(stage, side = "main") {
-  const myToken = ++transitionTokens[side];
   const suffix = side === "main" ? "" : `-${side}`;
-  const allKeys = ["own", "country", "global"].map((k) => k + suffix);
-  const allPanels = allKeys.map((k) => document.getElementById(panelIds[k]));
+  const myToken = ++transitionTokens[side];
+  const area = document.getElementById(side === "main" ? "chart-area" : "split-chart-area");
+  const ownKey = "own" + suffix;
+  const ownPanel = document.getElementById(panelIds[ownKey]);
+  const wanted = stage >= 2 ? comparisonOrder[stage - 2] : null;
+  const wantedKey = wanted && enabledComparisons.has(wanted) ? wanted + suffix : null;
+  const prevKey = slotState[side];
+  slotState[side] = wantedKey;
 
-  // Step 1: fade everything out
-  allPanels.forEach((p) => p.classList.remove("shown"));
+  const allPanels = comparisonOrder.map((k) => document.getElementById(panelIds[k + suffix]));
+  const fadeMs = 400;
+
+  // Stage 0 (intro): everything hidden.
+  if (stage === 0) {
+    [ownPanel, ...allPanels].forEach((p) => {
+      p.classList.remove("shown");
+      setTimeout(() => { if (myToken === transitionTokens[side]) p.classList.remove("visible"); }, fadeMs);
+    });
+    area.classList.remove("compare");
+    return;
+  }
+
+  const oldPanel = prevKey ? document.getElementById(panelIds[prevKey]) : null;
+  const newPanel = wantedKey ? document.getElementById(panelIds[wantedKey]) : null;
+  const ownWasShown = ownPanel.classList.contains("visible");
+
+  if (oldPanel && oldPanel !== newPanel) oldPanel.classList.remove("shown");
 
   setTimeout(() => {
-    if (myToken !== transitionTokens[side]) return; // a newer transition took over
+    if (myToken !== transitionTokens[side]) return;
+    allPanels.forEach((p) => { if (p !== newPanel) p.classList.remove("visible", "shown"); });
+    area.classList.toggle("compare", !!newPanel);
+    ownPanel.classList.add("visible");
+    if (newPanel) newPanel.classList.add("visible");
 
-    // Step 2: resize instantly (invisible) + redraw at final size
-    allKeys.forEach((key, i) => {
-      const shouldBeVisible = (i + 1) <= stage;
-      const panel = allPanels[i];
-      panel.classList.toggle("visible", shouldBeVisible);
-    });
-
-    // Let layout settle one frame before measuring/drawing
     requestAnimationFrame(() => {
       if (myToken !== transitionTokens[side]) return;
-      allKeys.forEach((key, i) => {
-        if ((i + 1) <= stage) redrawPanel(key, side);
-      });
-
-      // Step 3: fade the correct panels back in
+      redrawPanel(ownKey, side);
+      if (newPanel) redrawPanel(wantedKey, side);
       requestAnimationFrame(() => {
         if (myToken !== transitionTokens[side]) return;
-        allKeys.forEach((key, i) => {
-          if ((i + 1) <= stage) allPanels[i].classList.add("shown");
-        });
+        ownPanel.classList.add("shown");
+        if (newPanel) newPanel.classList.add("shown");
       });
     });
-  }, 460); // slightly longer than the 0.45s opacity transition
+  }, oldPanel && oldPanel !== newPanel ? fadeMs : 0);
 }
 
 // --- Scrollama wiring ---
@@ -859,7 +902,7 @@ async function handleStepEnter(response) {
   document.getElementById("chart-area").classList.toggle("active", !isSplit && !isIntro);
   document.getElementById("split-chart-area").classList.toggle("active", isSplit && !isIntro);
 
-  const stage = type === "reveal-1" ? 1 : type === "reveal-2" ? 2 : type === "reveal-3" ? 3 : 0;
+  const stage = type === "reveal-1" ? 1 : type === "reveal-2" ? 2 : type === "reveal-3" ? 3 : type === "reveal-4" ? 4 : 0;
 
   function playTitleSwap() {
     titleEl.classList.remove("title-in", "title-out");
@@ -937,9 +980,9 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
   window.addEventListener("resize", () => {
   scroller.resize();
   const allKeys = [
-    "own", "country", "global",
-    "own-worry", "country-worry", "global-worry",
-    "own-experience", "country-experience", "global-experience"
+    "own", "country", "dimglobal", "global",
+    "own-worry", "country-worry", "dimglobal-worry", "global-worry",
+    "own-experience", "country-experience", "dimglobal-experience", "global-experience"
   ];
   allKeys.forEach((key) => {
     const panel = document.getElementById(panelIds[key]);
@@ -1103,7 +1146,7 @@ async function refreshCurrentStep() {
     const [worryMetricName, expMetricName] = currentDisplayKey.split("|");
     if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetricName); updatePanelLabels("worry"); }
     if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetricName); updatePanelLabels("experience"); }
-    ["own-worry", "country-worry", "global-worry", "own-experience", "country-experience", "global-experience"].forEach((key) => {
+    ["own-worry", "country-worry", "dimglobal-worry", "global-worry", "own-experience", "country-experience", "dimglobal-experience", "global-experience"].forEach((key) => {
       const side = key.includes("-worry") ? "worry" : "experience";
       const panel = document.getElementById(panelIds[key]);
       if (panel.classList.contains("visible")) redrawPanel(key, side);
@@ -1115,7 +1158,7 @@ async function refreshCurrentStep() {
     sideState.main.chartData = data.chartData;
     applyLegendMode("main", currentDisplayKey);
     updatePanelLabels("main");
-    ["own", "country", "global"].forEach((key) => {
+    ["own", "country", "dimglobal", "global"].forEach((key) => {
       const panel = document.getElementById(panelIds[key]);
       if (panel.classList.contains("visible")) redrawPanel(key, "main");
     });
