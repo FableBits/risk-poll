@@ -762,6 +762,9 @@ function updatePanelLabels(side) {
   }
   const dimGlobalEl = document.getElementById(`panel-label-dimglobal${suffix}`);
   if (dimGlobalEl) dimGlobalEl.textContent = `Global average${dimText ? ": " + dimText : ""}`;
+
+  const cmpText = document.getElementById("cmp-country-text");
+  if (cmpText) cmpText.textContent = selection.mode === "country" ? "Country average" : "Region average";
 }
 
 const sharedLegendKeys = { main: "main-shared", worry: "worry-shared", experience: "experience-shared" };
@@ -820,6 +823,7 @@ function redrawPanel(key, side = "main") {
 const comparisonOrder = ["country", "dimglobal", "global"];
 const enabledComparisons = new Set(comparisonOrder);
 const slotState = { main: null, worry: null, experience: null };
+let lastStage = 0;
 
 // --- Crossfade logic:
 // 1. Fade OUT every panel (opacity -> 0), wait for the fade to finish.
@@ -903,6 +907,7 @@ async function handleStepEnter(response) {
   document.getElementById("split-chart-area").classList.toggle("active", isSplit && !isIntro);
 
   const stage = type === "reveal-1" ? 1 : type === "reveal-2" ? 2 : type === "reveal-3" ? 3 : type === "reveal-4" ? 4 : 0;
+  lastStage = stage;
 
   function playTitleSwap() {
     titleEl.classList.remove("title-in", "title-out");
@@ -1218,3 +1223,53 @@ dim2ValueSelect.addEventListener("change", () => {
 populatePlaceSelect();
 populateDimensionControls();
 updatePanelLabels("main");
+
+// --- Comparisons dropdown ---
+const cmpBtn = document.getElementById("comparisons-btn");
+const cmpMenu = document.getElementById("comparisons-menu");
+const cmpBoxes = cmpMenu.querySelectorAll('input[type="checkbox"]');
+
+function closeCmpMenu() { cmpMenu.hidden = true; }
+
+cmpBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (!cmpMenu.hidden) return closeCmpMenu();
+  const r = cmpBtn.getBoundingClientRect();
+  cmpMenu.style.left = `${r.left}px`;
+  cmpMenu.style.top = `${r.bottom + 4}px`;
+  cmpMenu.hidden = false;
+});
+cmpMenu.addEventListener("click", (e) => e.stopPropagation());
+document.addEventListener("click", closeCmpMenu);
+window.addEventListener("scroll", closeCmpMenu, { passive: true });
+window.addEventListener("resize", closeCmpMenu);
+
+function applyComparisonChange() {
+  // Hide the scroll steps of unticked comparisons (reveal-2/3/4 = country/dimglobal/global).
+  document.querySelectorAll('.step[data-type^="reveal-"]').forEach((step) => {
+    const n = Number(step.dataset.type.split("-")[1]);
+    step.classList.toggle("step-skipped", n >= 2 && !enabledComparisons.has(comparisonOrder[n - 2]));
+  });
+  scroller.resize();
+
+  cmpBtn.textContent = enabledComparisons.size === comparisonOrder.length
+    ? "Comparisons"
+    : `Comparisons (${enabledComparisons.size})`;
+
+  if (lastStage > 0) {
+    if (currentDisplayKey && currentDisplayKey.includes("|")) {
+      showPanelsUpTo(lastStage, "worry");
+      showPanelsUpTo(lastStage, "experience");
+    } else {
+      showPanelsUpTo(lastStage, "main");
+    }
+  }
+}
+
+cmpBoxes.forEach((box) => {
+  box.addEventListener("change", () => {
+    if (box.checked) enabledComparisons.add(box.value);
+    else enabledComparisons.delete(box.value);
+    applyComparisonChange();
+  });
+});
