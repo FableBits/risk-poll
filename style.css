@@ -214,7 +214,7 @@ body {
 #controls-bar {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
   background: #111;
   display: flex;
   flex-direction: row;
@@ -507,3 +507,19 @@ body {
 .comparisons-menu[hidden] { display: none; }
 .comparisons-menu label { cursor: pointer; white-space: nowrap; }
 .step-skipped { display: none; }
+
+.comparisons-menu input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin: 0 6px 0 0;
+  border: 1px solid #ff6b1a;
+  border-radius: 3px;
+  background: transparent;
+  vertical-align: -2px;
+  cursor: pointer;
+}
+.comparisons-menu input[type="checkbox"]:checked {
+  background: #ff6b1a url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2 6.5l3 3 5-6' fill='none' stroke='%23111' stroke-width='2'/></svg>") center / 10px no-repeat;
+}
