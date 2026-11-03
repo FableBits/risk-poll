@@ -847,7 +847,7 @@ function showPanelsUpTo(stage, side = "main") {
   slotState[side] = wantedKey;
 
   const allPanels = comparisonOrder.map((k) => document.getElementById(panelIds[k + suffix]));
-  const fadeMs = 400;
+  const fadeMs = 650;
 
   // Stage 0 (intro): everything hidden.
   if (stage === 0) {
