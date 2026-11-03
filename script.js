@@ -823,6 +823,7 @@ function redrawPanel(key, side = "main") {
 const comparisonOrder = ["country", "dimglobal", "global"];
 const enabledComparisons = new Set(comparisonOrder);
 const slotState = { main: null, worry: null, experience: null };
+const drawnMetric = { main: null, worry: null, experience: null };
 let lastStage = 0;
 
 // --- Crossfade logic:
@@ -861,9 +862,15 @@ function showPanelsUpTo(stage, side = "main") {
 
   const oldPanel = prevKey ? document.getElementById(panelIds[prevKey]) : null;
   const newPanel = wantedKey ? document.getElementById(panelIds[wantedKey]) : null;
-  const ownWasShown = ownPanel.classList.contains("visible");
+  const layoutChanged = area.classList.contains("compare") !== !!newPanel;
+  const metricChanged = drawnMetric[side] !== sideState[side].metric;
+  const swapping = oldPanel && oldPanel !== newPanel;
+  const needFade = ownPanel.classList.contains("visible") && (layoutChanged || metricChanged || swapping);
 
-  if (oldPanel && oldPanel !== newPanel) oldPanel.classList.remove("shown");
+  if (needFade) {
+    if (layoutChanged || metricChanged) ownPanel.classList.remove("shown");
+    allPanels.forEach((p) => p.classList.remove("shown"));
+  }
 
   setTimeout(() => {
     if (myToken !== transitionTokens[side]) return;
@@ -875,6 +882,7 @@ function showPanelsUpTo(stage, side = "main") {
     requestAnimationFrame(() => {
       if (myToken !== transitionTokens[side]) return;
       redrawPanel(ownKey, side);
+      drawnMetric[side] = sideState[side].metric;
       if (newPanel) redrawPanel(wantedKey, side);
       requestAnimationFrame(() => {
         if (myToken !== transitionTokens[side]) return;
@@ -882,7 +890,7 @@ function showPanelsUpTo(stage, side = "main") {
         if (newPanel) newPanel.classList.add("shown");
       });
     });
-  }, oldPanel && oldPanel !== newPanel ? fadeMs : 0);
+  }, needFade ? fadeMs : 0);
 }
 
 // --- Scrollama wiring ---
