@@ -506,3 +506,4 @@ body {
 }
 .comparisons-menu[hidden] { display: none; }
 .comparisons-menu label { cursor: pointer; white-space: nowrap; }
+.step-skipped { display: none; }
