@@ -1249,8 +1249,6 @@ cmpBtn.addEventListener("click", (e) => {
 });
 cmpMenu.addEventListener("click", (e) => e.stopPropagation());
 document.addEventListener("click", closeCmpMenu);
-window.addEventListener("scroll", closeCmpMenu, { passive: true });
-window.addEventListener("resize", closeCmpMenu);
 
 function applyComparisonChange() {
   // Hide the scroll steps of unticked comparisons (reveal-2/3/4 = country/dimglobal/global).
