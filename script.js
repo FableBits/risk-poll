@@ -1083,12 +1083,20 @@ function populateSelect(selectEl, optionsMap, { includeNone = false, noneLabel =
 function populatePlaceSelect() {
   if (selection.mode === "country") {
     placeSelectLabel.textContent = "Country";
-    const asMap = Object.fromEntries(ALL_COUNTRIES.map((c) => [c, c]));
-    populateSelect(placeSelect, asMap);
+    const sorted = [...ALL_COUNTRIES].sort((a, b) => a.localeCompare(b));
+    populateSelect(placeSelect, Object.fromEntries(sorted.map((c) => [c, c])));
     placeSelect.value = selection.country;
   } else {
     placeSelectLabel.textContent = "Global region";
-    populateSelect(placeSelect, GLOBAL_REGIONS);
+    placeSelect.innerHTML = "";
+    Object.entries(GLOBAL_REGIONS)
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .forEach(([code, name]) => {
+        const opt = document.createElement("option");
+        opt.value = code;
+        opt.textContent = name;
+        placeSelect.appendChild(opt);
+      });
     placeSelect.value = String(selection.region);
   }
 }
