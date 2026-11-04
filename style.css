@@ -532,13 +532,7 @@ body {
 }
 
 @media (max-width: 834px) {
-  .styled-select {
-    color-scheme: dark;
-    accent-color: #ff6b1a;
-  }
-  .styled-select option {
-    background-color: #1a1a1a;
-    color: #eee;
-  }
+  :root {
+    color-scheme:dark;
+  }  
 }
-
