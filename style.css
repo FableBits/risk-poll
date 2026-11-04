@@ -530,3 +530,15 @@ body {
 .comparisons-menu input[type="checkbox"]:checked {
   background: #ff6b1a url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2 6.5l3 3 5-6' fill='none' stroke='%23111' stroke-width='2'/></svg>") center / 10px no-repeat;
 }
+
+@media (max-width: 834px) {
+  .styled-select {
+    color-scheme: dark;
+    accent-color: #ff6b1a;
+  }
+  .styled-select option {
+    background-color: #1a1a1a;
+    color: #eee;
+  }
+}
+
