@@ -724,7 +724,7 @@ function drawChart(svgSelector, seriesData, chartYears) {
       .attr("cx", (d, i) => x(chartYears[i]))
       .attr("cy", (d) => y(d))
       .attr("r", 3.5)
-      .attr("fill", colorScale(series.label));
+      .attr("fill", colorScale(series.label))
       .attr("stroke", "#1a1a1a")
       .attr("stroke-width", 1.5);
   });
