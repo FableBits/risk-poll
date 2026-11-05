@@ -288,7 +288,7 @@ const metricsConfig = {
       0.75: "Very Resilient",
       0.5: "Moderately Resilient",
       0.25: "Mildly Resilient",
-      0: "Least resilient"    
+      0: "Least Resilient"    
     },
     order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
@@ -385,9 +385,23 @@ const selection = {
 // us no directory listing to discover years dynamically.
 const ALL_KNOWN_YEARS = [2019, 2021, 2023, 2025];
 
-// Dynamic, stable color assignment: the same category label always gets
-// the same color once first encountered, reused across panels/metrics.
-const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
+// Ordered answer sets get fixed, meaningful colors; everything else
+// (e.g. the Greatest_Risk answers) cycles a muted palette, consistently
+// across panels.
+const fixedColors = {
+  "Very worried": "#d9663a", "Somewhat worried": "#d9b44a", "Not worried": "#6f8fa8",
+  "Very serious threat": "#d9663a", "Somewhat serious threat": "#d9b44a", "Not a threat at all": "#6f8fa8",
+  "Personally experienced": "#d9663a", "Know someone who has experienced": "#d9b44a",
+  "Personally and know someone": "#a67bb5", "No": "#6f8fa8", "Yes": "#d9663a",
+  "More safe": "#5aa5a0", "Less safe": "#d4694a", "About as safe": "#9a9a9a",
+  "Most Resilient": "#5f9fd1", "Very Resilient": "#93bfd0", "Moderately Resilient": "#d9d2b0",
+  "Mildly Resilient": "#e0a15a", "Least Resilient": "#d4693a"
+};
+const fallbackScale = d3.scaleOrdinal([
+  "#d9a24a", "#6fb0d8", "#4fa58a", "#c487a8", "#d0663a",
+  "#8f9fd8", "#b8c46a", "#a0a0a0", "#4a7fb5", "#d98a8a"
+]);
+const colorScale = (label) => fixedColors[label.trim()] || fallbackScale(label.trim());
 
 function labelFor(metric, code) {
   const cfg = metricsConfig[metric];
@@ -685,7 +699,9 @@ function drawChart(svgSelector, seriesData, chartYears) {
       .datum(series.values)
       .attr("fill", "none")
       .attr("stroke", colorScale(series.label))
-      .attr("stroke-width", 2.5)
+      .attr("stroke-width", 2)
+      .attr("stroke-linecap", "round")
+      .attr("stroke-linejoin", "round")
       .attr("d", line);
 
     svg.selectAll(`.label-${series.label.replace(/\W/g, "")}`)
@@ -707,8 +723,10 @@ function drawChart(svgSelector, seriesData, chartYears) {
       .append("circle")
       .attr("cx", (d, i) => x(chartYears[i]))
       .attr("cy", (d) => y(d))
-      .attr("r", 3)
+      .attr("r", 3.5)
       .attr("fill", colorScale(series.label));
+      .attr("stroke", "#1a1a1a")
+      .attr("stroke-width", 1.5);
   });
 }
 
