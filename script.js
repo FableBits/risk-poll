@@ -710,7 +710,7 @@ function drawChart(svgSelector, seriesData, chartYears) {
     svg.selectAll(`.label-${series.label.replace(/\W/g, "")}`)
       .data(series.values)
       .enter()
-      .filter((d, i) => d !== null) && i < chartYears.length - 1)
+      .filter((d, i) => d !== null && i < chartYears.length - 1)
       .append("text")
       .attr("x", (d, i) => x(chartYears[i]))
       .attr("y", (d) => y(d) - 8)
