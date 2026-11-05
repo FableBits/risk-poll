@@ -664,7 +664,9 @@ function drawChart(svgSelector, seriesData, chartYears) {
   const node = svg.node();
   const width = node.clientWidth || 300;
   const height = node.clientHeight || 100;
-  const margin = { top: 10, right: 10, bottom: 20, left: 30 };
+  // const margin = { top: 10, right: 10, bottom: 20, left: 30 };
+  const wide = width >= 420; // enough room for series names at the line ends
+  const margin = { top: 10, right: wide ? 120 : 38, bottom: 20, left: 34 };
 
   svg.attr("viewBox", `0 0 ${width} ${height}`);
 
@@ -684,15 +686,16 @@ function drawChart(svgSelector, seriesData, chartYears) {
 
   svg.append("g")
     .attr("transform", `translate(0,${height - margin.bottom})`)
-    .call(d3.axisBottom(x).tickFormat(d3.format("d")))
-    .call((g) => g.selectAll("text").attr("fill", "#aaa").attr("font-size", "10px"))
-    .call((g) => g.selectAll("line,path").attr("stroke", "#555"));
+    .call(d3.axisBottom(x).tickSize(0).tickPadding(8).tickFormat(d3.format("d")))
+    .call((g) => g.select(".domain").attr("stroke", "#444"))
+    .call((g) => g.selectAll("text").attr("fill", "#999").attr("font-size", "10px"));
 
   svg.append("g")
     .attr("transform", `translate(${margin.left},0)`)
-    .call(d3.axisLeft(y).ticks(4))
-    .call((g) => g.selectAll("text").attr("fill", "#aaa").attr("font-size", "10px"))
-    .call((g) => g.selectAll("line,path").attr("stroke", "#555"));
+    .call(d3.axisLeft(y).ticks(4).tickSize(-(width - margin.left - margin.right)).tickFormat((d) => d + "%"))
+    .call((g) => g.select(".domain").remove())
+    .call((g) => g.selectAll(".tick line").attr("stroke", "#fff").attr("stroke-opacity", 0.08))
+    .call((g) => g.selectAll("text").attr("fill", "#999").attr("font-size", "10px"));
 
   seriesData.forEach((series) => {
     svg.append("path")
@@ -707,7 +710,7 @@ function drawChart(svgSelector, seriesData, chartYears) {
     svg.selectAll(`.label-${series.label.replace(/\W/g, "")}`)
       .data(series.values)
       .enter()
-      .filter((d) => d !== null)
+      .filter((d, i) => d !== null) && i < chartYears.length - 1)
       .append("text")
       .attr("x", (d, i) => x(chartYears[i]))
       .attr("y", (d) => y(d) - 8)
@@ -727,6 +730,25 @@ function drawChart(svgSelector, seriesData, chartYears) {
       .attr("fill", colorScale(series.label))
       .attr("stroke", "#1a1a1a")
       .attr("stroke-width", 1.5);
+  });
+    
+  // End-of-line labels, nudged apart so close lines don't overlap.
+  const ends = seriesData
+    .map((s) => ({ s, last: s.values[s.values.length - 1], y: y(s.values[s.values.length - 1]) }))
+    .sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) {
+    if (ends[i].y - ends[i - 1].y < 12) ends[i].y = ends[i - 1].y + 12;
+  }
+  ends.forEach((e) => {
+    const name = e.s.label.trim();
+    const short = name.length > 18 ? name.slice(0, 17) + "…" : name;
+    svg.append("text")
+      .attr("x", width - margin.right + 8)
+      .attr("y", e.y + 3.5)
+      .attr("font-size", "10px")
+      .attr("font-weight", "600")
+      .attr("fill", colorScale(e.s.label))
+      .text(wide ? `${short} ${e.last}%` : `${e.last}%`);
   });
 }
 
