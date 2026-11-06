@@ -937,9 +937,13 @@ function showPanelsUpTo(stage, side = "main") {
 
     requestAnimationFrame(() => {
       if (myToken !== transitionTokens[side]) return;
-      redrawPanel(ownKey, side, !ownPanel.classList.contains("shown"));
+      if (!ownPanel.classList.contains("shown")) {
+        redrawPanel(ownKey, side, true);
+      }
       drawnMetric[side] = sideState[side].metric;
-      if (newPanel) redrawPanel(wantedKey, side, !ownPanel.classList.contains("shown"));
+      if (newPanel && !newPanel.classList.contains("shown")) {
+        redrawPanel(wantedKey, side, true);
+      }
       requestAnimationFrame(() => {
         if (myToken !== transitionTokens[side]) return;
         ownPanel.classList.add("shown");
