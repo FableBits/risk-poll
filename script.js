@@ -657,7 +657,7 @@ async function ensureMetricLoaded(metric) {
 
 // --- D3 chart drawing ---
 
-function drawChart(svgSelector, seriesData, chartYears) {
+function drawChart(svgSelector, seriesData, chartYears, animate = false) {
   const svg = d3.select(svgSelector);
   svg.selectAll("*").remove();
 
@@ -698,7 +698,7 @@ function drawChart(svgSelector, seriesData, chartYears) {
     .call((g) => g.selectAll("text").attr("fill", "#999").attr("font-size", "10px"));
 
   seriesData.forEach((series) => {
-    svg.append("path")
+    const path = svg.append("path")
       .datum(series.values)
       .attr("fill", "none")
       .attr("stroke", colorScale(series.label))
@@ -706,6 +706,21 @@ function drawChart(svgSelector, seriesData, chartYears) {
       .attr("stroke-linecap", "round")
       .attr("stroke-linejoin", "round")
       .attr("d", line);
+
+    if (animate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches && path.attr("d")) {
+      const length = path.node().getTotalLength();
+      if (length > 0) {
+        path.attr("stroke-dasharray", `${length} ${length}`)
+          .attr("stroke-dashoffset", length)
+          .transition()
+          .duration(900)
+          .ease(d3.easeCubicOut)
+          .attr("stroke-dashoffset", 0)
+          .on("end", function () {
+            d3.select(this).attr("stroke-dasharray", null);
+          });
+      }
+    }
 
     svg.selectAll(`.label-${series.label.replace(/\W/g, "")}`)
       .data(series.values)
@@ -853,10 +868,10 @@ const panelIds = {
   "global-experience": "panel-global-experience"
 };
 
-function redrawPanel(key, side = "main") {
+function redrawPanel(key, side = "main", animate = false) {
   const panelKey = side === "main" ? key : key.replace(`-${side}`, "");
   const data = sideState[side].chartData[panelKey];
-  drawChart(`svg[data-series="${key}"]`, data, sideState[side].years);
+  drawChart(`svg[data-series="${key}"]`, data, sideState[side].years, animate);
   renderLegend(key, data);
 }
 
@@ -922,9 +937,9 @@ function showPanelsUpTo(stage, side = "main") {
 
     requestAnimationFrame(() => {
       if (myToken !== transitionTokens[side]) return;
-      redrawPanel(ownKey, side);
+      redrawPanel(ownKey, side, !ownPanel.classList.contains("shown"));
       drawnMetric[side] = sideState[side].metric;
-      if (newPanel) redrawPanel(wantedKey, side);
+      if (newPanel) redrawPanel(wantedKey, side, !ownPanel.classList.contains("shown"));
       requestAnimationFrame(() => {
         if (myToken !== transitionTokens[side]) return;
         ownPanel.classList.add("shown");
