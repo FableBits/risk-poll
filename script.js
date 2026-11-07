@@ -374,7 +374,7 @@ const DIMENSION_NAMES = Object.keys(dimensionValueLabels);
 //                    dimensions (dim1 + dim2) can be combined
 const selection = {
   mode: "country",
-  country: "France", // placeholder default until the dropdown is wired up
+  country: "Afghanistan", // placeholder default until the dropdown is wired up
   region: 1,          // placeholder default (Eastern Africa) for region mode
   dim1: { name: "Gender", value: "2" }, // placeholder matches old sample
   dim2: { name: null, value: null }     // region mode only
@@ -810,14 +810,14 @@ function updatePanelLabels(side) {
   const ownEl = document.getElementById(`panel-label-own${suffix}`);
   const countryEl = document.getElementById(`panel-label-country${suffix}`);
 
-  if (ownEl) ownEl.textContent = `Your selection: ${place}${dimText ? ", " + dimText : ""}`;
+  if (ownEl) ownEl.textContent = `Your selection`;
   if (countryEl) {
     countryEl.textContent = selection.mode === "country"
-      ? `Country average: ${place}`
-      : `Region average: ${place}`;
+      ? `Country average`
+      : `Region average`;
   }
   const dimGlobalEl = document.getElementById(`panel-label-dimglobal${suffix}`);
-  if (dimGlobalEl) dimGlobalEl.textContent = `Global average${dimText ? ": " + dimText : ""}`;
+  if (dimGlobalEl) dimGlobalEl.textContent = `Dimension(s) global average`;
 
   const cmpText = document.getElementById("cmp-country-text");
   if (cmpText) cmpText.textContent = selection.mode === "country" ? "Country average" : "Region average";
