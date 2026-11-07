@@ -716,11 +716,10 @@ function drawChart(svgSelector, seriesData, chartYears, animate = false, flagged
     .call((g) => g.selectAll("text").attr("fill", "#999").attr("font-size", "10px"))
     .call((g) => g.selectAll(".tick text")
       .filter((year) => flaggedYears.has(Number(year)))
-      .append("tspan")
-      .attr("dx", 3)
+      .insert("tspan", function () { return this.firstChild; })
       .attr("fill", "#ff8b6b")
       .attr("font-weight", "bold")
-      .text("!"));
+      .text("!\u00a0"));
 
   svg.append("g")
     .attr("transform", `translate(${margin.left},0)`)
