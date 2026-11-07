@@ -553,15 +553,11 @@ body {
 @media (min-width: 835px) {
   #chart-area,
   #split-chart-area {
-    height: min(70vh, calc(100vh - 190px));
+    height: var(--chart-h, 70vh);
   }
 }
 
 @media (min-width: 835px) and (max-height: 760px) {
   #category-nav { bottom: 8px; }
-  #chart-area,
-  #split-chart-area {
-    height: min(70vh, calc(100vh - 170px));
-  }
 }
 
