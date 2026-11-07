@@ -744,6 +744,7 @@ function drawChart(svgSelector, seriesData, chartYears, animate = false, flagged
       .attr("tabindex", 0)
       .attr("role", "button")
       .attr("aria-label", "Low sample: fewer than 30 respondents")
+      .style("cursor", "pointer")
       .on("pointerenter", (event) => {
         if (event.pointerType === "mouse") showLowSampleTooltip(event.currentTarget);
       })
