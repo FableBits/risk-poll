@@ -1347,3 +1347,17 @@ cmpBoxes.forEach((box) => {
     applyComparisonChange();
   });
 });
+
+// Keep a gap between the chart box and the fixed category bar:
+// available height = bar's top edge - chart's sticky top - gap.
+const navEl = document.getElementById("category-nav");
+function fitChartHeight() {
+  const area = document.getElementById("chart-area");
+  const top = parseFloat(getComputedStyle(area).top) || 100;
+  const avail = navEl.getBoundingClientRect().top - top - 12;
+  const h = Math.max(220, Math.min(window.innerHeight * 0.7, avail));
+  document.documentElement.style.setProperty("--chart-h", `${h}px`);
+}
+fitChartHeight();
+window.addEventListener("resize", fitChartHeight);
+window.addEventListener("load", fitChartHeight);
