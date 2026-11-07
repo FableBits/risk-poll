@@ -1025,8 +1025,8 @@ async function handleStepEnter(response) {
       expMetric ? ensureMetricLoaded(expMetric) : null
     ]);
     if (myLoadToken !== loadToken) return;
-    if (worryData) { sideState.worry.metric = worryMetric; sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetric); updatePanelLabels("main"); }
-    if (expData) { sideState.experience.metric = expMetric; sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetric); updatePanelLabels("main"); }
+    if (worryData) { sideState.worry.metric = worryMetric; sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetric); updatePanelLabels("worry"); }
+    if (expData) { sideState.experience.metric = expMetric; sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetric); updatePanelLabels("experience"); }
 
     setActiveCategory(category);
     showPanelsUpTo(stage, "worry");
