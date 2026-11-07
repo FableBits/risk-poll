@@ -691,7 +691,7 @@ function drawChart(svgSelector, seriesData, chartYears, animate = false, flagged
   const height = node.clientHeight || 100;
   // const margin = { top: 10, right: 10, bottom: 20, left: 30 };
   const wide = width >= 420; // enough room for series names at the line ends
-  const margin = { top: 10, right: wide ? 120 : 10, bottom: 20, left: 34 };
+  const margin = { top: 10, right: wide ? 120 : 14, bottom: 20, left: 34 };
 
   svg.attr("viewBox", `0 0 ${width} ${height}`);
 
