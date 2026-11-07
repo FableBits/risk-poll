@@ -570,7 +570,7 @@ body {
   z-index: 30;
   max-width: calc(104vw - 20px);
   padding: 8px 10px;
-  border: 1px solid #555;
+  border: 1px solid #ff6b1a;
   border-radius: 6px;
   background: #222;
   color: #eee;
