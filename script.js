@@ -500,6 +500,14 @@ function bucketRows(rows) {
   return Object.values(grouped);
 }
 
+function lowSampleYears(rows) {
+  return new Set(
+    rows
+      .filter((row) => row.low_sample === 1 || row.low_sample === "1")
+      .map((row) => Number(row.year))
+  );
+}
+
 function buildSeries(rows, codes, metric, years) {
   const byLabel = {};
   codes.forEach((code) => {
@@ -570,6 +578,7 @@ async function loadMetricData(metric) {
   // Drop any years this metric excludes (e.g. incompatible coding scheme)
   // before we even compute which years exist.
   let countryRows = placeRows.filter((r) => !cfg.skipYears.includes(r.year));
+  const unbucketedCountryRows = countryRows;
   if (cfg.continuous) countryRows = bucketRows(countryRows);
 
   const years = [...new Set(countryRows.map((r) => r.year))].sort((a, b) => a - b);
@@ -577,14 +586,17 @@ async function loadMetricData(metric) {
   // "own" panel: filtered to the selected dimension(s)/value(s).
   // Country mode uses dim1 only; region mode can combine dim1 + dim2,
   // matched against dimension_2/dimension_2_value in the fetched file.
-  const ownRows = countryRows.filter((r) => {
+  const matchesOwnSelection = (r) => {
     if (!isRegionMode) {
       return r.dimension === selection.dim1.name && r.dimension_value === selection.dim1.value;
     }
     const fileDimMatch = r.dimension === fileDim.name && r.dimension_value === fileDim.value;
     if (!otherDim.name) return fileDimMatch && r.dimension_2 === "none" && r.dimension_2_value === "none";
     return fileDimMatch && r.dimension_2 === otherDim.name && r.dimension_2_value === otherDim.value;
-  });
+  };
+
+  const ownRows = countryRows.filter(matchesOwnSelection);
+  const ownLowSampleYears = lowSampleYears(unbucketedCountryRows.filter(matchesOwnSelection));
 
   // "country"/"place average" panel: no dimensions at all (dimension ===
   // "none" in both country and region mode - region files use "none.json"
@@ -603,6 +615,7 @@ async function loadMetricData(metric) {
   let globalRows = globalRowsPerYear
     .flat()
     .filter((r) => r.dimension_2 === "none" && r.dimension_2_value === "none");
+  const globalLowSampleYears = lowSampleYears(globalRows);
   if (cfg.continuous) globalRows = bucketRows(globalRows);
 
   // "dimglobal" panel: global average for the same dimension(s) as "own".
@@ -616,6 +629,7 @@ async function loadMetricData(metric) {
     if (!gDim2.name) return r.dimension_2 === "none" && r.dimension_2_value === "none";
     return r.dimension_2 === gDim2.name && r.dimension_2_value === gDim2.value;
   });
+  const dimGlobalLowSampleYears = lowSampleYears(dimGlobalRows);
   if (cfg.continuous) dimGlobalRows = bucketRows(dimGlobalRows);
   const dimGlobalCodes = rankTopCodes(dimGlobalRows, metric);
 
@@ -625,6 +639,17 @@ async function loadMetricData(metric) {
   const countryCodes = rankTopCodes(countryAvgRows, metric);
   const globalCodes = rankTopCodes(globalRows, metric);
 
+  const countryLowSampleRows = isRegionMode
+    ? countryAvgRows
+    : unbucketedCountryRows.filter((r) => r.dimension === "none" && r.dimension_value === "none");
+
+  const lowSamples = {
+    own: ownLowSampleYears,
+    country: lowSampleYears(countryLowSampleRows),
+    dimglobal: dimGlobalLowSampleYears,
+    global: globalLowSampleYears
+  };
+
   const chartData = {
     own: buildSeries(ownRows, ownCodes, metric, years),
     country: buildSeries(countryAvgRows, countryCodes, metric, years),
@@ -632,7 +657,7 @@ async function loadMetricData(metric) {
     global: buildSeries(globalRows, globalCodes, metric, years)   
   };
 
-  return { years, chartData };
+  return { years, chartData, lowSamples };
 }
 
 // --- Metric switching / caching ---
@@ -657,7 +682,7 @@ async function ensureMetricLoaded(metric) {
 
 // --- D3 chart drawing ---
 
-function drawChart(svgSelector, seriesData, chartYears, animate = false) {
+function drawChart(svgSelector, seriesData, chartYears, animate = false, flaggedYears) {
   const svg = d3.select(svgSelector);
   svg.selectAll("*").remove();
 
@@ -688,7 +713,14 @@ function drawChart(svgSelector, seriesData, chartYears, animate = false) {
     .attr("transform", `translate(0,${height - margin.bottom})`)
     .call(d3.axisBottom(x).tickSize(0).tickPadding(8).tickFormat(d3.format("d")))
     .call((g) => g.select(".domain").attr("stroke", "#444"))
-    .call((g) => g.selectAll("text").attr("fill", "#999").attr("font-size", "10px"));
+    .call((g) => g.selectAll("text").attr("fill", "#999").attr("font-size", "10px"))
+    .call((g) => g.selectAll(".tick text")
+      .filter((year) => flaggedYears.has(Number(year)))
+      .append("tspan")
+      .attr("dx", 3)
+      .attr("fill", "#ff8b6b")
+      .attr("font-weight", "bold")
+      .text("!"));
 
   svg.append("g")
     .attr("transform", `translate(${margin.left},0)`)
@@ -872,7 +904,7 @@ function redrawPanel(key, side = "main", animate = false) {
   const panelKey = side === "main" ? key : key.replace(`-${side}`, "");
   const data = sideState[side].chartData[panelKey];
   renderLegend(key, data);
-  drawChart(`svg[data-series="${key}"]`, data, sideState[side].years, animate);
+  drawChart(`svg[data-series="${key}"]`, data, sideState[side].years, animate, sideState[side].lowSamples[panelKey]);
 }
 
 // Which comparisons the reader has ticked, in scroll order.
@@ -1006,6 +1038,7 @@ async function handleStepEnter(response) {
       sideState.main.metric = metric;
       sideState.main.years = data.years;
       sideState.main.chartData = data.chartData;
+      sideState.main.lowSamples = data.lowSamples;
       applyLegendMode("main", metric);
       updatePanelLabels("main");
     }
@@ -1025,8 +1058,8 @@ async function handleStepEnter(response) {
       expMetric ? ensureMetricLoaded(expMetric) : null
     ]);
     if (myLoadToken !== loadToken) return;
-    if (worryData) { sideState.worry.metric = worryMetric; sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetric); updatePanelLabels("worry"); }
-    if (expData) { sideState.experience.metric = expMetric; sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetric); updatePanelLabels("experience"); }
+    if (worryData) { sideState.worry.metric = worryMetric; sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; sideState.worry.lowSamples = worryData.lowSamples; applyLegendMode("worry", worryMetric); updatePanelLabels("worry"); }
+    if (expData) { sideState.experience.metric = expMetric; sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; sideState.experience.lowSamples = expData.lowSamples; applyLegendMode("experience", expMetric); updatePanelLabels("experience"); }
 
     setActiveCategory(category);
     showPanelsUpTo(stage, "worry");
@@ -1041,6 +1074,7 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
   sideState.main.metric = "Greatest_Risk";
   sideState.main.years = data.years;
   sideState.main.chartData = data.chartData;
+  sideState.main.lowSamples = data.lowSamples;
 
   scroller
     .setup({
@@ -1225,8 +1259,8 @@ async function refreshCurrentStep() {
     ]);
     if (myLoadToken !== loadToken) return;
     const [worryMetricName, expMetricName] = currentDisplayKey.split("|");
-    if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; applyLegendMode("worry", worryMetricName); updatePanelLabels("worry"); }
-    if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; applyLegendMode("experience", expMetricName); updatePanelLabels("experience"); }
+    if (worryData) { sideState.worry.years = worryData.years; sideState.worry.chartData = worryData.chartData; sideState.worry.lowSamples = worryData.lowSamples; applyLegendMode("worry", worryMetricName); updatePanelLabels("worry"); }
+    if (expData) { sideState.experience.years = expData.years; sideState.experience.chartData = expData.chartData; sideState.experience.lowSamples = expData.lowSamples; applyLegendMode("experience", expMetricName); updatePanelLabels("experience"); }
     ["own-worry", "country-worry", "dimglobal-worry", "global-worry", "own-experience", "country-experience", "dimglobal-experience", "global-experience"].forEach((key) => {
       const side = key.includes("-worry") ? "worry" : "experience";
       const panel = document.getElementById(panelIds[key]);
@@ -1237,6 +1271,7 @@ async function refreshCurrentStep() {
     if (myLoadToken !== loadToken) return;
     sideState.main.years = data.years;
     sideState.main.chartData = data.chartData;
+    sideState.main.lowSamples = data.lowSamples;
     applyLegendMode("main", currentDisplayKey);
     updatePanelLabels("main");
     ["own", "country", "dimglobal", "global"].forEach((key) => {
