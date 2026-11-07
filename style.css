@@ -481,6 +481,10 @@ body {
   }
   .chart-half .shared-legend { grid-row: 4; }
   #split-chart-area:not(.compare) .chart-panel[id^="panel-own"] { grid-row: 2 / 4; }
+
+  [id^="panel-"][id$="-experience"] .panel-label {
+    visibility: hidden;
+  }
 }
 
 .comparisons-btn { width: 150px; text-align: left; }
