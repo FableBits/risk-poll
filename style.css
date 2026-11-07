@@ -565,3 +565,15 @@ body {
   #category-nav { bottom: 8px; }
 }
 
+#low-sample-tooltip {
+  position: fixed;
+  z-index: 30;
+  max-width: calc(100vw - 20px);
+  padding: 8px 10px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #222;
+  color: #eee;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
