@@ -871,8 +871,8 @@ const panelIds = {
 function redrawPanel(key, side = "main", animate = false) {
   const panelKey = side === "main" ? key : key.replace(`-${side}`, "");
   const data = sideState[side].chartData[panelKey];
-  drawChart(`svg[data-series="${key}"]`, data, sideState[side].years, animate);
   renderLegend(key, data);
+  drawChart(`svg[data-series="${key}"]`, data, sideState[side].years, animate);
 }
 
 // Which comparisons the reader has ticked, in scroll order.
