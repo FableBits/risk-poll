@@ -682,6 +682,27 @@ async function ensureMetricLoaded(metric) {
 
 // --- D3 chart drawing ---
 
+let lowSampleOwner = null;
+
+function showLowSampleTooltip(marker) {
+  const tooltip = document.getElementById("low-sample-tooltip");
+  lowSampleOwner = marker;
+  tooltip.hidden = false;
+
+  const markerBox = marker.getBoundingClientRect();
+  const tipBox = tooltip.getBoundingClientRect();
+  const left = Math.max(10, Math.min(markerBox.left, window.innerWidth - tipBox.width - 10));
+  const top = markerBox.top - tipBox.height - 8;
+
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${Math.max(10, top)}px`;
+}
+
+function hideLowSampleTooltip() {
+  document.getElementById("low-sample-tooltip").hidden = true;
+  lowSampleOwner = null;
+}
+
 function drawChart(svgSelector, seriesData, chartYears, animate = false, flaggedYears) {
   const svg = d3.select(svgSelector);
   svg.selectAll("*").remove();
@@ -719,7 +740,25 @@ function drawChart(svgSelector, seriesData, chartYears, animate = false, flagged
       .insert("tspan", function () { return this.firstChild; })
       .attr("fill", "#ff8b6b")
       .attr("font-weight", "bold")
-      .text("!\u00a0"));
+      .text("!\u00a0")
+      .attr("tabindex", 0)
+      .attr("role", "button")
+      .attr("aria-label", "Low sample: fewer than 30 respondents")
+      .on("pointerenter", (event) => {
+        if (event.pointerType === "mouse") showLowSampleTooltip(event.currentTarget);
+      })
+      .on("pointerleave", (event) => {
+        if (document.activeElement !== event.currentTarget) hideLowSampleTooltip();
+      })
+      .on("focus", (event) => showLowSampleTooltip(event.currentTarget))
+      .on("blur", hideLowSampleTooltip)
+      .on("click", (event) => showLowSampleTooltip(event.currentTarget))
+      .on("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          showLowSampleTooltip(event.currentTarget);
+        }
+      }));
 
   svg.append("g")
     .attr("transform", `translate(${margin.left},0)`)
@@ -1395,3 +1434,12 @@ function fitChartHeight() {
 fitChartHeight();
 window.addEventListener("resize", fitChartHeight);
 window.addEventListener("load", fitChartHeight);
+
+document.addEventListener("click", (event) => {
+  if (lowSampleOwner && event.target !== lowSampleOwner) hideLowSampleTooltip();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") hideLowSampleTooltip();
+});
+window.addEventListener("scroll", hideLowSampleTooltip, { passive: true });
+window.addEventListener("resize", hideLowSampleTooltip);
