@@ -1101,7 +1101,7 @@ function showPanelsUpTo(stage, side = "main") {
   const canFlipResize = layoutChanged && !metricChanged && ownPanel.classList.contains("shown");
 
   if (canFlipResize) {
-    flipRiskResize({ area, ownPanel, ownKey, side, oldPanel, newPanel, wantedKey, myToken });
+    flipRiskResize({ compareScope, ownPanel, ownKey, side, oldPanel, newPanel, wantedKey, myToken });
     return;
   }
 
