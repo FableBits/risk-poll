@@ -564,9 +564,9 @@ body {
     width: calc((100% - 8px) / 2);
   }  
 
-  #chart-area.risk-resize #panel-own > .panel-legend:not(.panel-legend-hidden) {
+  /* #chart-area.risk-resize #panel-own > .panel-legend:not(.panel-legend-hidden) {
     width: min(100%, var(--risk-legend-width, 100%));
-  }
+  } */
 }
 
 @media (min-width: 835px) and (max-height: 760px) {
@@ -586,7 +586,7 @@ body {
   pointer-events: none;
 }
 
-#chart-area.risk-resize.active {
+/* #chart-area.risk-resize.active {
   grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
   transition: grid-template-columns 650ms ease-in-out;
 }
@@ -664,4 +664,4 @@ body {
   #chart-area.risk-resize #panel-own .chart-svg {
     transition: none;
   }
-}
+} */
