@@ -563,6 +563,10 @@ body {
   #chart-area:not(.compare) #panel-own > .panel-legend:not(.panel-legend-hidden) {
     width: calc((100% - 8px) / 2);
   }  
+
+  #chart-area.risk-resize #panel-own > .panel-legend:not(.panel-legend-hidden) {
+    width: min(100%, var(--risk-legend-width, 100%));
+  }
 }
 
 @media (min-width: 835px) and (max-height: 760px) {
@@ -641,4 +645,9 @@ body {
   .series-end-label {
     transition: none;
   }
+}
+
+#chart-area.risk-resize.active:not(.compare) #panel-own {
+  grid-column: 1;
+  grid-row: 1;
 }
