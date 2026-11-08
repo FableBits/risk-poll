@@ -628,3 +628,17 @@ body {
     transition: none;
   }
 }
+
+.series-end-label {
+  transition: opacity 200ms ease;
+}
+
+.hide-end-labels .series-end-label {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .series-end-label {
+    transition: none;
+  }
+}
