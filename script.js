@@ -974,9 +974,27 @@ function flipRiskResize({ area, ownPanel, ownKey, side, oldPanel, newPanel, want
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const svg = ownPanel.querySelector(".chart-svg");
   const adding = !!newPanel;
+  const resizeMs = 950;
 
-  function doResize() {
+  function resetInlineStyles() {
+    svg.style.transition = "none";
+    svg.style.transform = "none";
+    svg.style.transformOrigin = "";
+    ownPanel.style.position = "";
+    ownPanel.style.zIndex = "";
+    ownPanel.style.overflow = "";
+  }
+
+  // Resizes the own panel in place, then calls onDone once the
+  // disguise-transform animation has actually finished (or immediately
+  // if a flip isn't possible/wanted, e.g. reduced motion).
+  function doResize(onDone) {
     if (myToken !== transitionTokens[side]) return;
+    // Defensive: clear any leftover styles from a transition that got
+    // interrupted earlier (interrupted CSS transitions don't always
+    // fire transitionend, so stale styles can survive otherwise).
+    resetInlineStyles();
+    void svg.offsetWidth;
     const beforeRect = svg.getBoundingClientRect();
 
     area.classList.toggle("compare", adding);
@@ -987,58 +1005,56 @@ function flipRiskResize({ area, ownPanel, ownKey, side, oldPanel, newPanel, want
     const canFlip = !reduceMotion && beforeRect.width > 0 && afterRect.width > 0 &&
       beforeRect.height > 0 && afterRect.height > 0;
 
-    if (canFlip) {
-      const scaleX = beforeRect.width / afterRect.width;
-      const scaleY = beforeRect.height / afterRect.height;
-      // Let the disguised (possibly oversized) content bleed outside the
-      // panel's own box instead of being clipped while we fake the old size.
-      ownPanel.style.position = "relative";
-      ownPanel.style.zIndex = "5";
-      ownPanel.style.overflow = "visible";
-      svg.style.transition = "none";
-      svg.style.transformOrigin = "left top";
-      svg.style.transform = `scale(${scaleX}, ${scaleY})`;
-      void svg.offsetWidth; // force reflow so the disguise paints before animating
-
-      requestAnimationFrame(() => {
-        if (myToken !== transitionTokens[side]) return;
-        svg.style.transition = "transform 600ms cubic-bezier(0.22, 0.61, 0.36, 1)";
-        svg.style.transform = "scale(1, 1)";
-      });
-
-      const cleanup = () => {
-        svg.style.transition = "";
-        svg.style.transform = "";
-        svg.style.transformOrigin = "";
-        ownPanel.style.position = "";
-        ownPanel.style.zIndex = "";
-        ownPanel.style.overflow = "";
-        svg.removeEventListener("transitionend", cleanup);
-      };
-      svg.addEventListener("transitionend", cleanup);
-      setTimeout(cleanup, 700);
+    if (!canFlip) {
+      if (onDone) onDone();
+      return;
     }
+
+    const scaleX = beforeRect.width / afterRect.width;
+    const scaleY = beforeRect.height / afterRect.height;
+    ownPanel.style.position = "relative";
+    ownPanel.style.zIndex = "5";
+    ownPanel.style.overflow = "visible";
+    svg.style.transition = "none";
+    svg.style.transformOrigin = "left top";
+    svg.style.transform = `scale(${scaleX}, ${scaleY})`;
+    void svg.offsetWidth;
+
+    requestAnimationFrame(() => {
+      if (myToken !== transitionTokens[side]) { resetInlineStyles(); return; }
+      svg.style.transition = `transform ${resizeMs}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+      svg.style.transform = "scale(1, 1)";
+    });
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resetInlineStyles();
+      svg.removeEventListener("transitionend", finish);
+      if (onDone) onDone();
+    };
+    svg.addEventListener("transitionend", finish);
+    setTimeout(finish, resizeMs + 100);
   }
 
   if (adding) {
-    // Comparison panel is appearing: own resizes in place while the new
-    // panel fades in alongside it - no grid conflict since nothing needs
-    // to be hidden first.
-    doResize();
-    newPanel.classList.add("visible");
-    requestAnimationFrame(() => {
+    // Resize first, and only once it's visibly finished, bring the
+    // comparison panel in - so they read as two clearly separate steps.
+    doResize(() => {
       if (myToken !== transitionTokens[side]) return;
-      if (!newPanel.classList.contains("shown")) {
-        redrawPanel(wantedKey, side, true);
-      }
+      newPanel.classList.add("visible");
       requestAnimationFrame(() => {
-        if (myToken === transitionTokens[side]) newPanel.classList.add("shown");
+        if (myToken !== transitionTokens[side]) return;
+        if (!newPanel.classList.contains("shown")) {
+          redrawPanel(wantedKey, side, true);
+        }
+        requestAnimationFrame(() => {
+          if (myToken === transitionTokens[side]) newPanel.classList.add("shown");
+        });
       });
     });
   } else {
-    // Comparison panel is leaving: let it fade out and fully vacate its
-    // grid cell first, THEN resize the own panel into the freed space
-    // (doing both at once causes a grid placement conflict).
     if (oldPanel) oldPanel.classList.remove("shown");
     setTimeout(() => {
       if (myToken !== transitionTokens[side]) return;
