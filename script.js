@@ -1097,14 +1097,9 @@ function showPanelsUpTo(stage, side = "main") {
   const swapping = oldPanel && oldPanel !== newPanel;
   const needFade = ownPanel.classList.contains("visible") && (layoutChanged || metricChanged || swapping);
 
-  const isGreatestRiskFlip =
-    side === "main" &&
-    sideState.main.metric === "Greatest_Risk" &&
-    layoutChanged &&
-    !metricChanged &&
-    ownPanel.classList.contains("shown");
+  const canFlipResize = layoutChanged && !metricChanged && ownPanel.classList.contains("shown");
 
-  if (isGreatestRiskFlip) {
+  if (canFlipResize) {
     flipRiskResize({ area, ownPanel, ownKey, side, oldPanel, newPanel, wantedKey, myToken });
     return;
   }
