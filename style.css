@@ -559,6 +559,10 @@ body {
   #split-chart-area {
     height: var(--chart-h, 70vh);
   }
+
+  #chart-area:not(.compare) #panel-own > .panel-legend:not(.panel-legend-hidden) {
+    width: calc((100% - 8px) / 2);
+  }  
 }
 
 @media (min-width: 835px) and (max-height: 760px) {
