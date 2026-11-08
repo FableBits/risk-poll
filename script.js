@@ -962,6 +962,92 @@ let lastStage = 0;
 // 3. Fade IN the panels that should be visible at this stage.
 let transitionTokens = { main: 0, worry: 0, experience: 0 };
 
+// --- Greatest_Risk-only "visible resize" for the own panel ---
+// Instead of fading the own panel out/in whenever a comparison is
+// added or removed, we let it stay visible and smoothly narrow/widen
+// in place, using the FLIP technique: snap the layout + redraw at the
+// final size (invisible to the eye, happens in one synchronous step),
+// disguise it as the OLD size with a CSS transform, then animate that
+// transform back to normal. The comparison panel still uses the
+// existing fade in/out.
+function flipRiskResize({ area, ownPanel, ownKey, side, oldPanel, newPanel, wantedKey, myToken }) {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const svg = ownPanel.querySelector(".chart-svg");
+  const adding = !!newPanel;
+
+  function doResize() {
+    if (myToken !== transitionTokens[side]) return;
+    const beforeRect = svg.getBoundingClientRect();
+
+    area.classList.toggle("compare", adding);
+    redrawPanel(ownKey, side, false);
+    drawnMetric[side] = sideState[side].metric;
+
+    const afterRect = svg.getBoundingClientRect();
+    const canFlip = !reduceMotion && beforeRect.width > 0 && afterRect.width > 0 &&
+      beforeRect.height > 0 && afterRect.height > 0;
+
+    if (canFlip) {
+      const scaleX = beforeRect.width / afterRect.width;
+      const scaleY = beforeRect.height / afterRect.height;
+      // Let the disguised (possibly oversized) content bleed outside the
+      // panel's own box instead of being clipped while we fake the old size.
+      ownPanel.style.position = "relative";
+      ownPanel.style.zIndex = "5";
+      ownPanel.style.overflow = "visible";
+      svg.style.transition = "none";
+      svg.style.transformOrigin = "left top";
+      svg.style.transform = `scale(${scaleX}, ${scaleY})`;
+      void svg.offsetWidth; // force reflow so the disguise paints before animating
+
+      requestAnimationFrame(() => {
+        if (myToken !== transitionTokens[side]) return;
+        svg.style.transition = "transform 600ms cubic-bezier(0.22, 0.61, 0.36, 1)";
+        svg.style.transform = "scale(1, 1)";
+      });
+
+      const cleanup = () => {
+        svg.style.transition = "";
+        svg.style.transform = "";
+        svg.style.transformOrigin = "";
+        ownPanel.style.position = "";
+        ownPanel.style.zIndex = "";
+        ownPanel.style.overflow = "";
+        svg.removeEventListener("transitionend", cleanup);
+      };
+      svg.addEventListener("transitionend", cleanup);
+      setTimeout(cleanup, 700);
+    }
+  }
+
+  if (adding) {
+    // Comparison panel is appearing: own resizes in place while the new
+    // panel fades in alongside it - no grid conflict since nothing needs
+    // to be hidden first.
+    doResize();
+    newPanel.classList.add("visible");
+    requestAnimationFrame(() => {
+      if (myToken !== transitionTokens[side]) return;
+      if (!newPanel.classList.contains("shown")) {
+        redrawPanel(wantedKey, side, true);
+      }
+      requestAnimationFrame(() => {
+        if (myToken === transitionTokens[side]) newPanel.classList.add("shown");
+      });
+    });
+  } else {
+    // Comparison panel is leaving: let it fade out and fully vacate its
+    // grid cell first, THEN resize the own panel into the freed space
+    // (doing both at once causes a grid placement conflict).
+    if (oldPanel) oldPanel.classList.remove("shown");
+    setTimeout(() => {
+      if (myToken !== transitionTokens[side]) return;
+      if (oldPanel) oldPanel.classList.remove("visible", "shown");
+      doResize();
+    }, oldPanel ? 650 : 0);
+  }
+}
+
 // stage 1 = own panel alone; stages 2-4 = own + one comparison.
 // Own never fades after its first appearance; only the comparison swaps.
 function showPanelsUpTo(stage, side = "main") {
@@ -994,6 +1080,18 @@ function showPanelsUpTo(stage, side = "main") {
   const metricChanged = drawnMetric[side] !== sideState[side].metric;
   const swapping = oldPanel && oldPanel !== newPanel;
   const needFade = ownPanel.classList.contains("visible") && (layoutChanged || metricChanged || swapping);
+
+  const isGreatestRiskFlip =
+    side === "main" &&
+    sideState.main.metric === "Greatest_Risk" &&
+    layoutChanged &&
+    !metricChanged &&
+    ownPanel.classList.contains("shown");
+
+  if (isGreatestRiskFlip) {
+    flipRiskResize({ area, ownPanel, ownKey, side, oldPanel, newPanel, wantedKey, myToken });
+    return;
+  }
 
   if (needFade) {
     if (layoutChanged || metricChanged) ownPanel.classList.remove("shown");
