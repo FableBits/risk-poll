@@ -651,3 +651,17 @@ body {
   grid-column: 1;
   grid-row: 1;
 }
+
+#chart-area.risk-resize #panel-own .chart-svg {
+  transition: opacity 180ms ease;
+}
+
+#chart-area.risk-resize #panel-own.chart-reflowing .chart-svg {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #chart-area.risk-resize #panel-own .chart-svg {
+    transition: none;
+  }
+}
