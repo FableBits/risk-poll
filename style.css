@@ -581,3 +581,50 @@ body {
   font-size: 0.8rem;
   pointer-events: none;
 }
+
+#chart-area.risk-resize.active {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+  transition: grid-template-columns 650ms ease-in-out;
+}
+
+#chart-area.risk-resize.active.compare {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+#chart-area.risk-resize .chart-panel {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+#chart-area.risk-resize #panel-own {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+@media (max-width: 834px) {
+  #chart-area.risk-resize.active {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 0fr) auto;
+    transition: grid-template-rows 650ms ease-in-out;
+  }
+
+  #chart-area.risk-resize.active.compare {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  #chart-area.risk-resize .chart-panel {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #chart-area.risk-resize #panel-own {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #chart-area.risk-resize.active {
+    transition: none;
+  }
+}
