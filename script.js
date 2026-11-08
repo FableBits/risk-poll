@@ -834,6 +834,7 @@ function drawChart(svgSelector, seriesData, chartYears, animate = false, flagged
         .attr("font-size", "10px")
         .attr("font-weight", "600")
         .attr("fill", colorScale(e.s.label))
+        .attr("class", "series-end-label")
         .text(name.length > 18 ? name.slice(0, 17) + "…" : name);
     });
   }
@@ -960,6 +961,92 @@ let lastStage = 0;
 //    since nothing is visible at this moment).
 // 3. Fade IN the panels that should be visible at this stage.
 let transitionTokens = { main: 0, worry: 0, experience: 0 };
+
+function waitForRiskGridResize(area) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return Promise.resolve();
+  }
+
+  const property = window.matchMedia("(max-width: 834px)").matches
+    ? "grid-template-rows"
+    : "grid-template-columns";
+
+  return new Promise((resolve) => {
+    let timeoutId;
+
+    const finish = () => {
+      clearTimeout(timeoutId);
+      area.removeEventListener("transitionend", onTransitionEnd);
+      resolve();
+    };
+
+    const onTransitionEnd = (event) => {
+      if (event.target === area && event.propertyName === property) finish();
+    };
+
+    area.addEventListener("transitionend", onTransitionEnd);
+    timeoutId = setTimeout(finish, 750);
+  });
+}
+
+async function transitionRiskLayout({
+  area,
+  ownPanel,
+  oldPanel,
+  newPanel,
+  ownKey,
+  wantedKey,
+  token,
+  toCompare
+}) {
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pause = (ms) => new Promise((resolve) => setTimeout(resolve, reducedMotion ? 0 : ms));
+  const isCurrent = () => token === transitionTokens.main;
+  const legend = ownPanel.querySelector(".panel-legend:not(.panel-legend-hidden)");
+
+  if (legend) {
+    area.style.setProperty("--risk-legend-width", `${legend.getBoundingClientRect().width}px`);
+  }
+
+  area.classList.add("risk-resize", "hide-end-labels");
+  await pause(220);
+  if (!isCurrent()) return;
+
+  if (toCompare) {
+    newPanel.classList.add("visible");
+    area.classList.add("compare");
+    await waitForRiskGridResize(area);
+    if (!isCurrent()) return;
+  } else {
+    oldPanel.classList.remove("shown");
+    await pause(900);
+    if (!isCurrent()) return;
+
+    oldPanel.classList.remove("visible");
+    area.classList.remove("compare");
+    await waitForRiskGridResize(area);
+    if (!isCurrent()) return;
+  }
+
+  ownPanel.classList.add("chart-reflowing");
+  await pause(200);
+  if (!isCurrent()) return;
+
+  redrawPanel(ownKey, "main", false);
+  requestAnimationFrame(() => ownPanel.classList.remove("chart-reflowing"));
+
+  await pause(200);
+  if (!isCurrent()) return;
+
+  if (newPanel) {
+    redrawPanel(wantedKey, "main", true);
+    newPanel.classList.add("shown");
+  }
+
+  ownPanel.classList.add("shown");
+  area.classList.remove("hide-end-labels", "risk-resize");
+  area.style.removeProperty("--risk-legend-width");
+}
 
 // stage 1 = own panel alone; stages 2-4 = own + one comparison.
 // Own never fades after its first appearance; only the comparison swaps.
