@@ -970,7 +970,7 @@ let transitionTokens = { main: 0, worry: 0, experience: 0 };
 // disguise it as the OLD size with a CSS transform, then animate that
 // transform back to normal. The comparison panel still uses the
 // existing fade in/out.
-function flipRiskResize({ area, ownPanel, ownKey, side, oldPanel, newPanel, wantedKey, myToken }) {
+function flipRiskResize({ compareScope, ownPanel, ownKey, side, oldPanel, newPanel, wantedKey, myToken }) {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const svg = ownPanel.querySelector(".chart-svg");
   const adding = !!newPanel;
@@ -997,7 +997,7 @@ function flipRiskResize({ area, ownPanel, ownKey, side, oldPanel, newPanel, want
     void svg.offsetWidth;
     const beforeRect = svg.getBoundingClientRect();
 
-    area.classList.toggle("compare", adding);
+    compareScope.classList.toggle("compare", adding);
     redrawPanel(ownKey, side, false);
     drawnMetric[side] = sideState[side].metric;
 
@@ -1072,6 +1072,7 @@ function showPanelsUpTo(stage, side = "main") {
   const area = document.getElementById(side === "main" ? "chart-area" : "split-chart-area");
   const ownKey = "own" + suffix;
   const ownPanel = document.getElementById(panelIds[ownKey]);
+  const compareScope = side === "main" ? area : ownPanel.closest(".chart-half");
   const wanted = stage >= 2 ? comparisonOrder[stage - 2] : null;
   const wantedKey = wanted && enabledComparisons.has(wanted) ? wanted + suffix : null;
   const prevKey = slotState[side];
@@ -1086,13 +1087,13 @@ function showPanelsUpTo(stage, side = "main") {
       p.classList.remove("shown");
       setTimeout(() => { if (myToken === transitionTokens[side]) p.classList.remove("visible"); }, fadeMs);
     });
-    area.classList.remove("compare");
+    compareScope.classList.remove("compare");
     return;
   }
 
   const oldPanel = prevKey ? document.getElementById(panelIds[prevKey]) : null;
   const newPanel = wantedKey ? document.getElementById(panelIds[wantedKey]) : null;
-  const layoutChanged = area.classList.contains("compare") !== !!newPanel;
+  const layoutChanged = compareScope.classList.contains("compare") !== !!newPanel;
   const metricChanged = drawnMetric[side] !== sideState[side].metric;
   const swapping = oldPanel && oldPanel !== newPanel;
   const needFade = ownPanel.classList.contains("visible") && (layoutChanged || metricChanged || swapping);
@@ -1112,7 +1113,7 @@ function showPanelsUpTo(stage, side = "main") {
   setTimeout(() => {
     if (myToken !== transitionTokens[side]) return;
     allPanels.forEach((p) => { if (p !== newPanel) p.classList.remove("visible", "shown"); });
-    area.classList.toggle("compare", !!newPanel);
+    compareScope.classList.toggle("compare", !!newPanel);
     ownPanel.classList.add("visible");
     if (newPanel) newPanel.classList.add("visible");
 
