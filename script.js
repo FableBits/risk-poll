@@ -947,6 +947,20 @@ function redrawPanel(key, side = "main", animate = false) {
   drawChart(`svg[data-series="${key}"]`, data, sideState[side].years, animate, sideState[side].lowSamples[panelKey]);
 }
 
+function redrawPanelWithFade(key, side, myLoadToken) {
+  const panel = document.getElementById(panelIds[key]);
+  if (!panel.classList.contains("visible")) return;
+  if (!panel.classList.contains("shown")) { redrawPanel(key, side); return; }
+  panel.classList.remove("shown");
+  setTimeout(() => {
+    if (myLoadToken !== loadToken) return; // a newer selection change took over
+    redrawPanel(key, side, true);
+    requestAnimationFrame(() => {
+      if (myLoadToken === loadToken) panel.classList.add("shown");
+    });
+  }, 650);
+}
+
 // Which comparisons the reader has ticked, in scroll order.
 const comparisonOrder = ["country", "dimglobal", "global"];
 const enabledComparisons = new Set(comparisonOrder);
@@ -1414,7 +1428,7 @@ async function refreshCurrentStep() {
     ["own-worry", "country-worry", "dimglobal-worry", "global-worry", "own-experience", "country-experience", "dimglobal-experience", "global-experience"].forEach((key) => {
       const side = key.includes("-worry") ? "worry" : "experience";
       const panel = document.getElementById(panelIds[key]);
-      if (panel.classList.contains("visible")) redrawPanel(key, side);
+      if (panel.classList.contains("visible")) redrawPanelWithFade(key, side, myLoadToken);
     });
   } else if (currentDisplayKey) {
     const data = await loadMetricData(currentDisplayKey);
@@ -1426,7 +1440,7 @@ async function refreshCurrentStep() {
     updatePanelLabels("main");
     ["own", "country", "dimglobal", "global"].forEach((key) => {
       const panel = document.getElementById(panelIds[key]);
-      if (panel.classList.contains("visible")) redrawPanel(key, "main");
+      if (panel.classList.contains("visible")) redrawPanelWithFade(key, "main", myLoadToken);
     });
   }
 }
