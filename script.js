@@ -1077,6 +1077,21 @@ function showPanelsUpTo(stage, side = "main") {
   const oldPanel = prevKey ? document.getElementById(panelIds[prevKey]) : null;
   const newPanel = wantedKey ? document.getElementById(panelIds[wantedKey]) : null;
   const layoutChanged = area.classList.contains("compare") !== !!newPanel;
+
+  if (side === "main" && sideState.main.metric === "Greatest_Risk" && layoutChanged) {
+    transitionRiskLayout({
+      area,
+      ownPanel,
+      oldPanel,
+      newPanel,
+      ownKey,
+      wantedKey,
+      token: myToken,
+      toCompare: !!newPanel
+    });
+    return;
+  }
+  
   const metricChanged = drawnMetric[side] !== sideState[side].metric;
   const swapping = oldPanel && oldPanel !== newPanel;
   const needFade = ownPanel.classList.contains("visible") && (layoutChanged || metricChanged || swapping);
