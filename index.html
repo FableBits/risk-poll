@@ -299,5 +299,31 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="script.js"></script>
 <div id="low-sample-tooltip" role="tooltip" hidden>Low sample: fewer than 30 respondents</div>
+
+<style>
+  html, body { overflow: hidden; }
+</style>
+<script>
+  const ALLOWED = [
+    'https://sleuthingmaps.com',
+    'https://www.sleuthingmaps.com',
+    'http://localhost:8000'
+  ];
+
+  window.addEventListener('message', (e) => {
+    if (!ALLOWED.includes(e.origin) || e.data?.type !== 'story-progress') return;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo(0, e.data.progress * max);
+  });
+
+  function reportHeight() {
+    if (parent !== window)
+      parent.postMessage({ type: 'story-height',
+        height: document.documentElement.scrollHeight }, '*');
+  }
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
+</script>  
+  
 </body>
 </html>
