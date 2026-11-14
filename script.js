@@ -1312,21 +1312,30 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
     })
     .onStepEnter(handleStepEnter);
 
+  let lastResizeWidth = window.innerWidth;
   window.addEventListener("resize", () => {
-  scroller.resize();
-  const allKeys = [
-    "own", "country", "dimglobal", "global",
-    "own-worry", "country-worry", "dimglobal-worry", "global-worry",
-    "own-experience", "country-experience", "dimglobal-experience", "global-experience"
-  ];
-  allKeys.forEach((key) => {
-    const panel = document.getElementById(panelIds[key]);
-    if (panel.classList.contains("visible")) {
-      const side = key.includes("-worry") ? "worry" : key.includes("-experience") ? "experience" : "main";
-      redrawPanel(key, side);
-    }
+    scroller.resize();
+    // Mobile browsers fire "resize" when the address bar shows/hides
+    // during scroll - that only changes height, not width. Ignore those
+    // so a mid-scroll flip-resize animation never gets wiped out by an
+    // unrelated, instant redraw.
+    const width = window.innerWidth;
+    if (width === lastResizeWidth) return;
+    lastResizeWidth = width;
+
+    const allKeys = [
+      "own", "country", "dimglobal", "global",
+      "own-worry", "country-worry", "dimglobal-worry", "global-worry",
+      "own-experience", "country-experience", "dimglobal-experience", "global-experience"
+    ];
+    allKeys.forEach((key) => {
+      const panel = document.getElementById(panelIds[key]);
+      if (panel.classList.contains("visible")) {
+        const side = key.includes("-worry") ? "worry" : key.includes("-experience") ? "experience" : "main";
+        redrawPanel(key, side);
+      }
+    });
   });
-});
 
   categoryLinks.forEach((link) => {
     link.addEventListener("click", () => {
