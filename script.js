@@ -976,6 +976,12 @@ let lastStage = 0;
 // 3. Fade IN the panels that should be visible at this stage.
 let transitionTokens = { main: 0, worry: 0, experience: 0 };
 
+// If a transition gets interrupted (e.g. a fast mobile scroll fires a new
+// stage before the previous one's deferred step runs), the function below
+// is called to instantly finish it before the new transition starts - so
+// panels are never left half-faded or half-resized.
+const pendingCleanup = { main: null, worry: null, experience: null };
+
 // --- Greatest_Risk-only "visible resize" for the own panel ---
 // Instead of fading the own panel out/in whenever a comparison is
 // added or removed, we let it stay visible and smoothly narrow/widen
@@ -997,6 +1003,16 @@ function flipRiskResize({ compareScope, ownPanel, ownKey, side, oldPanel, newPan
     ownPanel.style.position = "";
     ownPanel.style.zIndex = "";
     ownPanel.style.overflow = "";
+  }
+
+  // Instantly finishes whatever doResize's animation was meant to settle
+  // into, without playing the animation - used both as the interrupted-
+  // transition fallback and as the normal "skip the flip" fallback.
+  function finishResizeInstantly() {
+    resetInlineStyles();
+    compareScope.classList.toggle("compare", adding);
+    redrawPanel(ownKey, side, false);
+    drawnMetric[side] = sideState[side].metric;
   }
 
   // Resizes the own panel in place, then calls onDone once the
@@ -1034,20 +1050,27 @@ function flipRiskResize({ compareScope, ownPanel, ownKey, side, oldPanel, newPan
     svg.style.transform = `scale(${scaleX}, ${scaleY})`;
     void svg.offsetWidth;
 
-    requestAnimationFrame(() => {
-      if (myToken !== transitionTokens[side]) { resetInlineStyles(); return; }
-      svg.style.transition = `transform ${resizeMs}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
-      svg.style.transform = "scale(1, 1)";
-    });
-
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
+      pendingCleanup[side] = null;
       resetInlineStyles();
       svg.removeEventListener("transitionend", finish);
       if (onDone) onDone();
     };
+
+    // If interrupted (a new stage fires before this finishes), snap
+    // straight to the final state instead of leaving the disguise
+    // transform/position:relative hanging around.
+    pendingCleanup[side] = () => { resetInlineStyles(); };
+
+    requestAnimationFrame(() => {
+      if (myToken !== transitionTokens[side]) { finish(); return; }
+      svg.style.transition = `transform ${resizeMs}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+      svg.style.transform = "scale(1, 1)";
+    });
+
     svg.addEventListener("transitionend", finish);
     setTimeout(finish, resizeMs + 100);
   }
@@ -1055,23 +1078,40 @@ function flipRiskResize({ compareScope, ownPanel, ownKey, side, oldPanel, newPan
   if (adding) {
     // Resize first, and only once it's visibly finished, bring the
     // comparison panel in - so they read as two clearly separate steps.
+    pendingCleanup[side] = () => {
+      finishResizeInstantly();
+      newPanel.classList.add("visible", "shown");
+      redrawPanel(wantedKey, side, false);
+    };
     doResize(() => {
       if (myToken !== transitionTokens[side]) return;
       newPanel.classList.add("visible");
+      pendingCleanup[side] = () => {
+        newPanel.classList.add("shown");
+        if (!newPanel.dataset.riskDrawn) redrawPanel(wantedKey, side, false);
+      };
       requestAnimationFrame(() => {
         if (myToken !== transitionTokens[side]) return;
         if (!newPanel.classList.contains("shown")) {
           redrawPanel(wantedKey, side, true);
         }
+        pendingCleanup[side] = () => { newPanel.classList.add("shown"); };
         requestAnimationFrame(() => {
-          if (myToken === transitionTokens[side]) newPanel.classList.add("shown");
+          if (myToken !== transitionTokens[side]) return;
+          pendingCleanup[side] = null;
+          newPanel.classList.add("shown");
         });
       });
     });
   } else {
     if (oldPanel) oldPanel.classList.remove("shown");
+    pendingCleanup[side] = () => {
+      if (oldPanel) oldPanel.classList.remove("visible", "shown");
+      finishResizeInstantly();
+    };
     setTimeout(() => {
       if (myToken !== transitionTokens[side]) return;
+      pendingCleanup[side] = null;
       if (oldPanel) oldPanel.classList.remove("visible", "shown");
       doResize();
     }, oldPanel ? 650 : 0);
@@ -1081,6 +1121,11 @@ function flipRiskResize({ compareScope, ownPanel, ownKey, side, oldPanel, newPan
 // stage 1 = own panel alone; stages 2-4 = own + one comparison.
 // Own never fades after its first appearance; only the comparison swaps.
 function showPanelsUpTo(stage, side = "main") {
+  if (pendingCleanup[side]) {
+    const run = pendingCleanup[side];
+    pendingCleanup[side] = null;
+    run();
+  }
   const suffix = side === "main" ? "" : `-${side}`;
   const myToken = ++transitionTokens[side];
   const area = document.getElementById(side === "main" ? "chart-area" : "split-chart-area");
@@ -1097,10 +1142,16 @@ function showPanelsUpTo(stage, side = "main") {
 
   // Stage 0 (intro): everything hidden.
   if (stage === 0) {
-    [ownPanel, ...allPanels].forEach((p) => {
-      p.classList.remove("shown");
-      setTimeout(() => { if (myToken === transitionTokens[side]) p.classList.remove("visible"); }, fadeMs);
-    });
+    [ownPanel, ...allPanels].forEach((p) => p.classList.remove("shown"));
+    pendingCleanup[side] = () => {
+      pendingCleanup[side] = null;
+      [ownPanel, ...allPanels].forEach((p) => p.classList.remove("visible"));
+    };
+    setTimeout(() => {
+      if (myToken !== transitionTokens[side]) return;
+      pendingCleanup[side] = null;
+      [ownPanel, ...allPanels].forEach((p) => p.classList.remove("visible"));
+    }, fadeMs);
     compareScope.classList.remove("compare");
     return;
   }
@@ -1124,8 +1175,20 @@ function showPanelsUpTo(stage, side = "main") {
     allPanels.forEach((p) => p.classList.remove("shown"));
   }
 
+  pendingCleanup[side] = () => {
+    pendingCleanup[side] = null;
+    allPanels.forEach((p) => { if (p !== newPanel) p.classList.remove("visible", "shown"); });
+    compareScope.classList.toggle("compare", !!newPanel);
+    if (!ownPanel.classList.contains("shown")) redrawPanel(ownKey, side, false);
+    drawnMetric[side] = sideState[side].metric;
+    if (newPanel && !newPanel.classList.contains("shown")) redrawPanel(wantedKey, side, false);
+    ownPanel.classList.add("visible", "shown");
+    if (newPanel) newPanel.classList.add("visible", "shown");
+  };
+
   setTimeout(() => {
     if (myToken !== transitionTokens[side]) return;
+    pendingCleanup[side] = null;
     allPanels.forEach((p) => { if (p !== newPanel) p.classList.remove("visible", "shown"); });
     compareScope.classList.toggle("compare", !!newPanel);
     ownPanel.classList.add("visible");
@@ -1142,6 +1205,7 @@ function showPanelsUpTo(stage, side = "main") {
       }
       requestAnimationFrame(() => {
         if (myToken !== transitionTokens[side]) return;
+        pendingCleanup[side] = null;
         ownPanel.classList.add("shown");
         if (newPanel) newPanel.classList.add("shown");
       });
