@@ -18,7 +18,7 @@
     '#story-intro h2{font:700 clamp(2rem,6vw,4rem)/1.1 system-ui,sans-serif;margin:0 0 .5em;color:#fff;}',
     '#story-intro p{max-width:34ch;font-size:1.25rem;margin:0;opacity:.85;color:#fff;}',
     '#story-pin{height:600vh;}',
-    '#story-frame{position:fixed;top:0;left:0;width:100%;height:100vh;height:100svh;border:0;display:none;background:#0b0d12;z-index:1003;}',
+    '#story-frame{position:fixed;top:0;left:0;width:100%;height:100vh;height:100svh;border:0;visibility:hidden;background:#0b0d12;z-index:1003;}',
     '#story-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1001;background:#0b0d12;opacity:0;pointer-events:none;}'
   ].join('\n');
   var style = document.createElement('style');
@@ -59,7 +59,7 @@
   function clamp(v) { return Math.min(1, Math.max(0, v)); }
   function ease(t) { return t * t * (3 - 2 * t); }
 
-  var ticking = false, lastProgress = -1, theme = 'light';
+  var ticking = false, lastProgress = -1, theme = 'light', loaded = false;
 
   function detectTheme() {
     var nodes = [document.body, document.documentElement];
@@ -77,7 +77,7 @@
     if (t === theme && wrap.getAttribute('data-theme')) return;
     theme = t;
     wrap.setAttribute('data-theme', t);
-    if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'theme', theme: t }, STORY_ORIGIN);
+    if (loaded && frame.contentWindow) frame.contentWindow.postMessage({ type: 'theme', theme: t }, STORY_ORIGIN);
     schedule();
   }
   function syncThemeSoon() { syncTheme(); setTimeout(syncTheme, 450); }
@@ -106,15 +106,15 @@
     // pin's height, then hide before it starts / once it's fully past
     // (sliding out with it right at the end, like sticky would).
     if (p.top > 0 || p.bottom < 0) {
-      frame.style.display = 'none';
+      frame.style.visibility = 'hidden';
     } else {
-      frame.style.display = 'block';
+      frame.style.visibility = 'visible';
       frame.style.top = (p.bottom < vh ? p.bottom - vh : 0) + 'px';
     }
 
     var total = p.height - vh;
     var progress = total > 0 ? clamp(-p.top / total) : 0;
-    if (progress !== lastProgress && frame.contentWindow) {
+    if (loaded && progress !== lastProgress && frame.contentWindow) {
       lastProgress = progress;
       frame.contentWindow.postMessage({ type: 'story-progress', progress: progress }, STORY_ORIGIN);
     }
@@ -125,6 +125,7 @@
   window.addEventListener('resize', schedule);
   window.addEventListener('pageshow', schedule);
   frame.addEventListener('load', function () {
+    loaded = true;
     lastProgress = -1;
     frame.contentWindow.postMessage({ type: 'theme', theme: theme }, STORY_ORIGIN);
     schedule();
