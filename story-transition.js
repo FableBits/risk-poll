@@ -121,11 +121,12 @@
     // pinned to the top of the viewport while scrolling through the
     // pin's height, then hide before it starts / once it's fully past
     // (sliding out with it right at the end, like sticky would).
-    if (p.top > 0 || p.bottom < 0) {
+    if (p.top >= vh || p.bottom <= 0) {
       frame.style.visibility = 'hidden';
     } else {
       frame.style.visibility = 'visible';
-      frame.style.top = (p.bottom < vh ? p.bottom - vh : 0) + 'px';
+      var top = p.top > 0 ? p.top : (p.bottom < vh ? p.bottom - vh : 0);
+      frame.style.top = top + 'px';
     }
 
     var total = p.height - vh;
