@@ -309,6 +309,7 @@
 
   window.addEventListener('message', (e) => {
     if (!ALLOWED.includes(e.origin) || e.data?.type !== 'story-progress') return;
+    window.storyParentOrigin = e.origin; // lets script.js ask the blog to scroll
     const max = document.documentElement.scrollHeight - window.innerHeight;
     window.scrollTo(0, e.data.progress * max);
   });
