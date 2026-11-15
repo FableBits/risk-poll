@@ -1395,10 +1395,7 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
         // scroll, so scrolling here alone would be undone on the next
         // wheel/touch. Ask the blog to scroll to the matching point
         // instead; its progress messages then move this page there.
-        const rect = firstStepOfCategory.getBoundingClientRect();
-        const max = document.documentElement.scrollHeight - window.innerHeight;
-        const targetY = window.scrollY + rect.top - (window.innerHeight - rect.height) / 2;
-        const progress = max > 0 ? Math.min(1, Math.max(0, targetY / max)) : 0;
+        const progress = window.storyProgressForStep(firstStepOfCategory);
         parent.postMessage({ type: "story-scroll-to", progress }, window.storyParentOrigin);
       } else {
         firstStepOfCategory.scrollIntoView({ behavior: "smooth", block: "center" });
