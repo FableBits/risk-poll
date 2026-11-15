@@ -148,9 +148,18 @@
     schedule();
   });
   window.addEventListener('message', function (e) {
-    if (e.origin !== STORY_ORIGIN || !e.data || e.data.type !== 'story-height') return;
-    var h = Number(e.data.height);
-    if (h > 0) { pin.style.height = h + 'px'; schedule(); }
+    if (e.origin !== STORY_ORIGIN || !e.data) return;
+    if (e.data.type === 'story-height') {
+      var h = Number(e.data.height);
+      if (h > 0) { pin.style.height = h + 'px'; schedule(); }
+    } else if (e.data.type === 'story-scroll-to') {
+      // The story's category bar was clicked: scroll the blog to the
+      // matching point, which in turn scrolls the story there.
+      var pr = clamp(Number(e.data.progress) || 0);
+      var total = pin.offsetHeight - window.innerHeight;
+      var y = window.scrollY + pin.getBoundingClientRect().top + pr * Math.max(0, total);
+      window.scrollTo({ top: Math.round(y), behavior: reduce ? 'auto' : 'smooth' });
+    }
   });
 
   frame.src = STORY_URL;
