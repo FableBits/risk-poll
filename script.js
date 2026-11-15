@@ -1305,6 +1305,8 @@ async function handleStepEnter(response) {
 
 const scroller = scrollama();
 
+const IS_EMBEDDED = window.self !== window.top;
+
 // Preload the first metric before enabling scroll-triggered drawing
 ensureMetricLoaded("Greatest_Risk").then((data) => {
   sideState.main.metric = "Greatest_Risk";
@@ -1316,7 +1318,8 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
     .setup({
       step: ".step",
       offset: 0.5,
-      debug: false
+      debug: false,
+      ...(IS_EMBEDDED ? { root: document } : {})
     })
     .onStepEnter(handleStepEnter);
 
@@ -1385,9 +1388,21 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
       }, 50);
 
       // Hard fallback in case something goes wrong.
-      setTimeout(finishJump, 1500);
+      setTimeout(finishJump, IS_EMBEDDED ? 2500 : 1500);
 
-      firstStepOfCategory.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (IS_EMBEDDED && window.storyParentOrigin) {
+        // Embedded: this page's scroll position is driven by the blog's
+        // scroll, so scrolling here alone would be undone on the next
+        // wheel/touch. Ask the blog to scroll to the matching point
+        // instead; its progress messages then move this page there.
+        const rect = firstStepOfCategory.getBoundingClientRect();
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        const targetY = window.scrollY + rect.top - (window.innerHeight - rect.height) / 2;
+        const progress = max > 0 ? Math.min(1, Math.max(0, targetY / max)) : 0;
+        parent.postMessage({ type: "story-scroll-to", progress }, window.storyParentOrigin);
+      } else {
+        firstStepOfCategory.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     });
   });       
 });
