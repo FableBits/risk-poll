@@ -5,6 +5,11 @@
 
   var STORY_URL = mount.getAttribute('data-story-url');
   var COVER_HEADER = mount.getAttribute('data-cover-header') !== 'false';
+  // Elements to hide while the story is on screen: the Yuki theme's header
+  // (and its sticky copy) plus the WordPress admin bar shown when logged in.
+  // Override from the post with data-hide-selector="..." if needed.
+  var HIDE_SELECTOR = mount.getAttribute('data-hide-selector') ||
+    '.yuki-site-header, .yuki-sticky, #wpadminbar';
   var FADE_LIGHT = [0.35, 0.75];
   var FADE_DARK = [0.05, 0.45];
   var STORY_ORIGIN = new URL(STORY_URL).origin;
@@ -21,6 +26,13 @@
     '#story-frame{position:fixed;top:0;left:0;width:100%;height:100vh;height:100svh;border:0;visibility:hidden;background:#0b0d12;z-index:1003;}',
     '#story-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1001;background:#0b0d12;opacity:0;pointer-events:none;}'
   ].join('\n');
+  if (COVER_HEADER) {
+    var hideSel = HIDE_SELECTOR.split(',').map(function (s) {
+      return 'html.story-active ' + s.trim();
+    }).join(',');
+    css += '\n' + hideSel + '{opacity:0 !important;visibility:hidden !important;pointer-events:none !important;' +
+      'transition:opacity .3s ease,visibility 0s linear .3s !important;}';
+  }  
   var style = document.createElement('style');
   style.textContent = css;
   document.head.appendChild(style);
@@ -96,6 +108,10 @@
     var exit = clamp(w.bottom / vh);
     var dark = Math.min(enter, exit);
     overlay.style.opacity = reduce ? (dark > 0.5 ? 1 : 0) : ease(dark);
+
+    // Hide the blog's menu bar as soon as the dark overlay starts fading
+    // in, and bring it back once the reader scrolls out of the story.
+    if (COVER_HEADER) document.documentElement.classList.toggle('story-active', dark > 0.02);
 
     var range = theme === 'dark' ? FADE_DARK : FADE_LIGHT;
     var textIn = clamp((enter - range[0]) / (range[1] - range[0]));
