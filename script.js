@@ -1051,19 +1051,27 @@ function flipRiskResize({ compareScope, ownPanel, ownKey, side, oldPanel, newPan
     void svg.offsetWidth;
 
     let done = false;
+    let fallbackTimer = null;
     const finish = () => {
       if (done) return;
       done = true;
       pendingCleanup[side] = null;
+      clearTimeout(fallbackTimer);
       resetInlineStyles();
       svg.removeEventListener("transitionend", finish);
       if (onDone) onDone();
     };
 
-    // If interrupted (a new stage fires before this finishes), snap
-    // straight to the final state instead of leaving the disguise
-    // transform/position:relative hanging around.
-    pendingCleanup[side] = () => { resetInlineStyles(); };
+    // If interrupted (a new stage fires before this finishes), cancel
+    // this call's own pending listener/timer - otherwise they fire
+    // later, on their own schedule, and can clobber whatever transition
+    // the NEXT call has since started - then snap to the final state.
+    pendingCleanup[side] = () => {
+      done = true;
+      clearTimeout(fallbackTimer);
+      svg.removeEventListener("transitionend", finish);
+      resetInlineStyles();
+    };
 
     requestAnimationFrame(() => {
       if (myToken !== transitionTokens[side]) { finish(); return; }
@@ -1072,7 +1080,7 @@ function flipRiskResize({ compareScope, ownPanel, ownKey, side, oldPanel, newPan
     });
 
     svg.addEventListener("transitionend", finish);
-    setTimeout(finish, resizeMs + 100);
+    fallbackTimer = setTimeout(finish, resizeMs + 100);
   }
 
   if (adding) {
