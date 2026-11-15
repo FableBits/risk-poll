@@ -307,20 +307,54 @@
     'http://localhost:8000'
   ];
 
+  // Embedded in the blog, the blog's scroll position drives this page.
+  // The chart boxes sit ABOVE the steps and switch between hidden and
+  // shown, which pushes all the text down or up by the chart's height.
+  // Standalone, the browser silently compensates for that shift. Embedded,
+  // we have to do it ourselves: the blog's progress is mapped onto the
+  // steps only, with the chart boxes' current height added on top.
+  const chartBoxes = ['chart-area', 'split-chart-area']
+    .map((id) => document.getElementById(id)).filter(Boolean);
+  const chartShift = () => chartBoxes.reduce((sum, el) => sum + el.offsetHeight, 0);
+  const contentMax = () => Math.max(0,
+    document.documentElement.scrollHeight - chartShift() - window.innerHeight);
+  let storyProgress = null;
+
+  function applyStoryProgress() {
+    if (storyProgress === null) return;
+    window.scrollTo(0, storyProgress * contentMax() + chartShift());
+  }
+
+  // Used by the category bar (script.js): the blog progress at which
+  // the given step sits in the middle of the screen.
+  window.storyProgressForStep = (el) => {
+    const rect = el.getBoundingClientRect();
+    const y = window.scrollY - chartShift() + rect.top - (window.innerHeight - rect.height) / 2;
+    const max = contentMax();
+    return max > 0 ? Math.min(1, Math.max(0, y / max)) : 0;
+  };
+
   window.addEventListener('message', (e) => {
     if (!ALLOWED.includes(e.origin) || e.data?.type !== 'story-progress') return;
     window.storyParentOrigin = e.origin; // lets script.js ask the blog to scroll
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    window.scrollTo(0, e.data.progress * max);
+    storyProgress = e.data.progress;
+    applyStoryProgress();
   });
 
   function reportHeight() {
     if (parent !== window)
       parent.postMessage({ type: 'story-height',
-        height: document.documentElement.scrollHeight }, '*');
+        height: document.documentElement.scrollHeight - chartShift() }, '*');
   }
   window.addEventListener('load', reportHeight);
   window.addEventListener('resize', reportHeight);
+
+  // Re-apply the position the moment a chart box appears, disappears or
+  // changes size, so the text never jumps or repeats.
+  if (parent !== window && 'ResizeObserver' in window) {
+    const ro = new ResizeObserver(() => { applyStoryProgress(); reportHeight(); });
+    chartBoxes.forEach((el) => ro.observe(el));
+  }
 </script>  
   
 </body>
