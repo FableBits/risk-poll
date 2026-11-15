@@ -18,7 +18,7 @@
     '#story-intro h2{font:700 clamp(2rem,6vw,4rem)/1.1 system-ui,sans-serif;margin:0 0 .5em;color:#fff;}',
     '#story-intro p{max-width:34ch;font-size:1.25rem;margin:0;opacity:.85;color:#fff;}',
     '#story-pin{height:600vh;}',
-    '#story-frame{position:fixed;top:0;left:0;width:100%;height:100vh;height:100svh;border:0;display:none;background:#0b0d12;z-index:1000;}',
+    '#story-frame{position:fixed;top:0;left:0;width:100%;height:100vh;height:100svh;border:0;display:none;background:#0b0d12;z-index:1003;}',
     '#story-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1001;background:#0b0d12;opacity:0;pointer-events:none;}'
   ].join('\n');
   var style = document.createElement('style');
@@ -52,7 +52,7 @@
   overlay.id = 'story-overlay';
   document.body.appendChild(overlay);
 
-  if (!COVER_HEADER) { overlay.style.zIndex = 900; wrap.style.zIndex = 901; frame.style.zIndex = 800; }
+  if (!COVER_HEADER) { overlay.style.zIndex = 900; wrap.style.zIndex = 901; frame.style.zIndex = 902; }
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
