@@ -1307,6 +1307,8 @@ const scroller = scrollama();
 
 const IS_EMBEDDED = window.self !== window.top;
 
+let lastEnteredStep = null;
+
 // Preload the first metric before enabling scroll-triggered drawing
 ensureMetricLoaded("Greatest_Risk").then((data) => {
   sideState.main.metric = "Greatest_Risk";
@@ -1321,7 +1323,11 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
       debug: false,
       ...(IS_EMBEDDED ? { root: document } : {})
     })
-    .onStepEnter(handleStepEnter);
+    .onStepEnter((response) => {
+      if (response.element === lastEnteredStep) return;
+      lastEnteredStep = response.element;
+      handleStepEnter(response);
+    });
 
   let lastResizeWidth = window.innerWidth;
   window.addEventListener("resize", () => {
@@ -1371,6 +1377,7 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
         settled = true;
         clearInterval(pollId);
         scroller.enable();
+        lastEnteredStep = firstStepOfCategory;
         handleStepEnter({ element: firstStepOfCategory, direction: "down" });
       };
 
