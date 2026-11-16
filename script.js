@@ -1113,10 +1113,7 @@ function flipRiskResize({ compareScope, ownPanel, ownKey, side, oldPanel, newPan
     });
   } else {
     if (oldPanel) oldPanel.classList.remove("shown");
-    pendingCleanup[side] = () => {
-      if (oldPanel) oldPanel.classList.remove("visible", "shown");
-      finishResizeInstantly();
-    };
+    pendingCleanup[side] = () => {};
     setTimeout(() => {
       if (myToken !== transitionTokens[side]) return;
       pendingCleanup[side] = null;
@@ -1154,13 +1151,14 @@ function showPanelsUpTo(stage, side = "main") {
     pendingCleanup[side] = () => {
       pendingCleanup[side] = null;
       [ownPanel, ...allPanels].forEach((p) => p.classList.remove("visible"));
+      compareScope.classList.remove("compare");
     };
     setTimeout(() => {
       if (myToken !== transitionTokens[side]) return;
       pendingCleanup[side] = null;
       [ownPanel, ...allPanels].forEach((p) => p.classList.remove("visible"));
+      compareScope.classList.remove("compare");
     }, fadeMs);
-    compareScope.classList.remove("compare");
     return;
   }
 
