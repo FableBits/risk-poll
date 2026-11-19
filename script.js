@@ -392,7 +392,7 @@ const fixedColors = {
   "Very worried": "#d9663a", "Somewhat worried": "#d9b44a", "Not worried": "#6f8fa8",
   "Very serious threat": "#d9663a", "Somewhat serious threat": "#d9b44a", "Not a threat at all": "#6f8fa8",
   "Personally experienced": "#d9663a", "Know someone who has": "#d9b44a",
-  "Both": "#a67bb5", "Neither": "#6f8fa8", "Yes": "#d9663a",
+  "Both": "#a67bb5", "Neither": "#6f8fa8", "Yes": "#d9663a", "No": "#5f9fd1",
   "More safe": "#5aa5a0", "Less safe": "#d4694a", "About as safe": "#9a9a9a",
   "Definitely": "#5f9fd1", "Considerably": "#93bfd0", "Moderately": "#d9d2b0",
   "Slightly": "#e0a15a", "Barely": "#d4693a"
