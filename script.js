@@ -87,9 +87,9 @@ const metricsConfig = {
   Exp2Y_Food: {
     labels: {
       1: "Personally experienced",
-      2: "Know someone who has experienced",
-      3: "Personally and know someone",
-      4: "No",
+      2: "Know someone who has",
+      3: "Both",
+      4: "Neither",
       98: "Don't know",
       99: "Refused"
     },
@@ -112,9 +112,9 @@ const metricsConfig = {
   Exp2Y_Water: {
     labels: {
       1: "Personally experienced",
-      2: "Know someone who has experienced",
-      3: "Personally and know someone",
-      4: "No",
+      2: "Know someone who has",
+      3: "Both",
+      4: "Neither",
       98: "Don't know",
       99: "Refused"
     },
@@ -137,9 +137,9 @@ const metricsConfig = {
   Exp2Y_Crime: {
     labels: {
       1: "Personally experienced",
-      2: "Know someone who has experienced",
-      3: "Personally and know someone",
-      4: "No",
+      2: "Know someone who has",
+      3: "Both",
+      4: "Neither",
       98: "Don't know",
       99: "Refused"
     },
@@ -162,9 +162,9 @@ const metricsConfig = {
   Exp2Y_Weather: {
     labels: {
       1: "Personally experienced",
-      2: "Know someone who has experienced",
-      3: "Personally and know someone",
-      4: "No",
+      2: "Know someone who has",
+      3: "Both",
+      4: "Neither",
       98: "Don't know",
       99: "Refused"
     },
@@ -187,9 +187,9 @@ const metricsConfig = {
   Exp2Y_Mental: {
     labels: {
       1: "Personally experienced",
-      2: "Know someone who has experienced",
-      3: "Personally and know someone",
-      4: "No",
+      2: "Know someone who has",
+      3: "Both",
+      4: "Neither",
       98: "Don't know",
       99: "Refused"
     },
@@ -212,9 +212,9 @@ const metricsConfig = {
   Exp2Y_Work: {
     labels: {
       1: "Personally experienced",
-      2: "Know someone who has experienced",
-      3: "Personally and know someone",
-      4: "No",
+      2: "Know someone who has",
+      3: "Both",
+      4: "Neither",
       98: "Don't know",
       99: "Refused"
     },
@@ -284,11 +284,11 @@ const metricsConfig = {
   },
   Resilience_idv: {
     labels: {
-      1: "Most Resilient",
-      0.75: "Very Resilient",
-      0.5: "Moderately Resilient",
-      0.25: "Mildly Resilient",
-      0: "Least Resilient"    
+      1: "Definitely",
+      0.75: "Considerably",
+      0.5: "Moderately",
+      0.25: "Slightly",
+      0: "Barely"  
     },
     order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
@@ -297,11 +297,11 @@ const metricsConfig = {
   },
   Resilience_hhl: {
     labels: {
-      1: "Most Resilient",
-      0.75: "Very Resilient",
-      0.5: "Moderately Resilient",
-      0.25: "Mildly Resilient",
-      0: "Least Resilient"      
+      1: "Definitely",
+      0.75: "Considerably",
+      0.5: "Moderately",
+      0.25: "Slightly",
+      0: "Barely"      
     },
     order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
@@ -311,11 +311,11 @@ const metricsConfig = {
   },
   Resilience_com: {
     labels: {
-      1: "Most Resilient",
-      0.75: "Very Resilient",
-      0.5: "Moderately Resilient",
-      0.25: "Mildly Resilient",
-      0: "Least Resilient"      
+      1: "Definitely",
+      0.75: "Considerably",
+      0.5: "Moderately",
+      0.25: "Slightly",
+      0: "Barely"      
     },
     order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
@@ -325,11 +325,11 @@ const metricsConfig = {
   },
   Resilience_soc: {
     labels: {
-      1: "Most Resilient",
-      0.75: "Very Resilient",
-      0.5: "Moderately Resilient",
-      0.25: "Mildly Resilient",
-      0: "Least Resilient"      
+      1: "Definitely",
+      0.75: "Considerably",
+      0.5: "Moderately",
+      0.25: "Slightly",
+      0: "Barely"      
     },
     order: [1, 0.75, 0.5, 0.25, 0],
     skipYears: [2019],
@@ -391,11 +391,11 @@ const ALL_KNOWN_YEARS = [2019, 2021, 2023, 2025];
 const fixedColors = {
   "Very worried": "#d9663a", "Somewhat worried": "#d9b44a", "Not worried": "#6f8fa8",
   "Very serious threat": "#d9663a", "Somewhat serious threat": "#d9b44a", "Not a threat at all": "#6f8fa8",
-  "Personally experienced": "#d9663a", "Know someone who has experienced": "#d9b44a",
-  "Personally and know someone": "#a67bb5", "No": "#6f8fa8", "Yes": "#d9663a",
+  "Personally experienced": "#d9663a", "Know someone who has": "#d9b44a",
+  "Both": "#a67bb5", "Neither": "#6f8fa8", "Yes": "#d9663a",
   "More safe": "#5aa5a0", "Less safe": "#d4694a", "About as safe": "#9a9a9a",
-  "Most Resilient": "#5f9fd1", "Very Resilient": "#93bfd0", "Moderately Resilient": "#d9d2b0",
-  "Mildly Resilient": "#e0a15a", "Least Resilient": "#d4693a"
+  "Definitely": "#5f9fd1", "Considerably": "#93bfd0", "Moderately": "#d9d2b0",
+  "Slightly": "#e0a15a", "Barely": "#d4693a"
 };
 const fallbackScale = d3.scaleOrdinal([
   "#d9a24a", "#6fb0d8", "#4fa58a", "#c487a8", "#d0663a",
