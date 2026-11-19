@@ -712,7 +712,24 @@ function drawChart(svgSelector, seriesData, chartYears, animate = false, flagged
   const height = node.clientHeight || 100;
   // const margin = { top: 10, right: 10, bottom: 20, left: 30 };
   const wide = width >= 420; // enough room for series names at the line ends
-  const margin = { top: 10, right: wide ? 120 : 14, bottom: 20, left: 34 };
+  // Narrow (mobile) panels also get line-end names, except in the split
+  // chart (worry/experience side by side), which has no room for them.
+  const isSplit = /-(worry|experience)"/.test(svgSelector);
+  const showEndLabels = wide || !isSplit;
+  const maxChars = wide ? 18 : 11; // longer names keep their beginning + "…"
+  const shortName = (label) => {
+    const name = label.trim();
+    return name.length > maxChars ? name.slice(0, maxChars - 1) + "…" : name;
+  };
+  let rightMargin = wide ? 120 : 14;
+  if (showEndLabels && !wide) {
+    // Reserve just enough room for the longest (shortened) name.
+    const probe = svg.append("text").attr("font-size", "10px").attr("font-weight", "600");
+    const longest = d3.max(seriesData, (s) => probe.text(shortName(s.label)).node().getComputedTextLength()) || 0;
+    probe.remove();
+    rightMargin = Math.ceil(longest) + 14;
+  }
+  const margin = { top: 10, right: rightMargin, bottom: 20, left: 34 };
 
   svg.attr("viewBox", `0 0 ${width} ${height}`);
 
@@ -818,8 +835,9 @@ function drawChart(svgSelector, seriesData, chartYears, animate = false, flagged
       .attr("stroke-width", 1.5);
   });
     
-  // End-of-line series names, desktop/wide panels only.
-  if (wide) {
+  // End-of-line series names: always on wide panels; on narrow (mobile)
+  // panels too, except in the split chart.
+  if (showEndLabels) {
     const ends = seriesData
       .map((s) => ({ s, y: y(s.values[s.values.length - 1]) }))
       .sort((a, b) => a.y - b.y);
@@ -835,7 +853,7 @@ function drawChart(svgSelector, seriesData, chartYears, animate = false, flagged
         .attr("font-weight", "600")
         .attr("fill", colorScale(e.s.label))
         .attr("class", "series-end-label")
-        .text(name.length > 18 ? name.slice(0, 17) + "…" : name);
+        .text(shortName(name));
     });
   }
 }
