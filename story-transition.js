@@ -19,9 +19,9 @@
 
   var css = [
     '#story-wrap{position:relative;z-index:1002;width:100vw;margin-left:0;}',
-    '#story-intro{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 24px;opacity:0;}',
-    '#story-intro h2{font:700 clamp(2rem,6vw,4rem)/1.1 system-ui,sans-serif;margin:0 0 .5em;color:#fff;}',
-    '#story-intro p{max-width:34ch;font-size:1.25rem;margin:0;opacity:.85;color:#fff;}',
+    '#story-intro{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;opacity:0;}',
+    '#story-intro h2{color:#fff;}',
+    '#story-intro p{color:#fff;opacity:.85;}',
     '#story-pin{height:600vh;}',
     '#story-frame{position:fixed;top:0;left:0;width:100%;height:100vh;height:100svh;border:0;visibility:hidden;background:#0b0d12;z-index:1003;}',
     '#story-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:1001;background:#0b0d12;opacity:0;pointer-events:none;}'
