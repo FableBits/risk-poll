@@ -18,7 +18,7 @@
   mount.innerHTML = '';
 
   var css = [
-    '#story-wrap{position:relative;z-index:1002;width:100vw;margin-left:calc(50% - 50vw);}',
+    '#story-wrap{position:relative;z-index:1002;width:100vw;margin-left:0;}',
     '#story-intro{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 24px;opacity:0;}',
     '#story-intro h2{font:700 clamp(2rem,6vw,4rem)/1.1 system-ui,sans-serif;margin:0 0 .5em;color:#fff;}',
     '#story-intro p{max-width:34ch;font-size:1.25rem;margin:0;opacity:.85;color:#fff;}',
