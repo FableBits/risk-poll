@@ -18,7 +18,7 @@
   mount.innerHTML = '';
 
   var css = [
-    '#story-wrap{position:relative;z-index:1002;width:100vw;margin-left:0;}',
+    '#story-wrap{position:relative;z-index:1002;width:100%;margin-left:0;}',
     '#story-intro{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;opacity:0;}',
     '#story-intro h2{color:#fff;}',
     '#story-intro p{color:#fff;opacity:.85;}',
