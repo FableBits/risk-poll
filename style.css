@@ -356,7 +356,7 @@ body {
 /* Shorter reveal steps so a single mouse-wheel scroll notch is
    enough to cross a step's activation threshold. */
 .step[data-type^="reveal"] {
-  height: 38vh;
+  height: 20vh;
 }
 
 #category-nav {
