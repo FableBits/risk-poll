@@ -358,6 +358,10 @@ body {
 .step[data-type^="reveal"] {
   height: 20vh;
 }
+.step[data-type^="reveal"] + .step[data-type="category-intro"] {
+  height: 130vh;
+  padding-top: 30vh;
+}
 
 #category-nav {
   position: fixed;
