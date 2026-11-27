@@ -1377,6 +1377,7 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
         `.step[data-category="${category}"]`
       );
       if (!firstStepOfCategory) return;
+      const jumpTarget = firstStepOfCategory.querySelector("p") || firstStepOfCategory;
 
       // Smooth scrolling crosses intermediate steps, causing scrollama to
       // fire onStepEnter repeatedly (blinking) and sometimes settle on the
@@ -1418,10 +1419,10 @@ ensureMetricLoaded("Greatest_Risk").then((data) => {
         // scroll, so scrolling here alone would be undone on the next
         // wheel/touch. Ask the blog to scroll to the matching point
         // instead; its progress messages then move this page there.
-        const progress = window.storyProgressForStep(firstStepOfCategory);
+        const progress = window.storyProgressForStep(jumpTarget);
         parent.postMessage({ type: "story-scroll-to", progress }, window.storyParentOrigin);
       } else {
-        firstStepOfCategory.scrollIntoView({ behavior: "smooth", block: "center" });
+        jumpTarget.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     });
   });       
