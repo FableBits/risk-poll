@@ -604,7 +604,7 @@ async function loadMetricData(metric) {
   const countryAvgRowsPerYear = isRegionMode
     ? await Promise.all(years.map((year) => loadGlobalYear(metric, year, selection.region, "none")))
     : null;
-  const countryAvgRows = isRegionMode
+  let countryAvgRows = isRegionMode
     ? countryAvgRowsPerYear.flat().filter((r) => !cfg.skipYears.includes(r.year))
     : countryRows.filter((r) => r.dimension === "none" && r.dimension_value === "none");
   const unbucketedCountryAvgRows = countryAvgRows;
