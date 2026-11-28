@@ -607,6 +607,8 @@ async function loadMetricData(metric) {
   const countryAvgRows = isRegionMode
     ? countryAvgRowsPerYear.flat().filter((r) => !cfg.skipYears.includes(r.year))
     : countryRows.filter((r) => r.dimension === "none" && r.dimension_value === "none");
+  const unbucketedCountryAvgRows = countryAvgRows;
+  if (isRegionMode && cfg.continuous) countryAvgRows = bucketRows(countryAvgRows);
 
   // "global" panel: one glregion fetch per included year, dimension_2 === "none"
   const globalRowsPerYear = await Promise.all(
@@ -640,7 +642,7 @@ async function loadMetricData(metric) {
   const globalCodes = rankTopCodes(globalRows, metric);
 
   const countryLowSampleRows = isRegionMode
-    ? countryAvgRows
+    ? unbucketedCountryAvgRows
     : unbucketedCountryRows.filter((r) => r.dimension === "none" && r.dimension_value === "none");
 
   const lowSamples = {
